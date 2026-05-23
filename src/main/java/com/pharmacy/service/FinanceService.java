@@ -1,6 +1,5 @@
 package com.pharmacy.service;
 
-import com.pharmacy.repository.PurchaseRepository;
 import com.pharmacy.repository.SaleItemRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -15,7 +14,6 @@ import java.time.LocalTime;
 public class FinanceService {
 
     private final SaleItemRepository saleItemRepository;
-    private final PurchaseRepository purchaseRepository;
 
     public BigDecimal calculateDailyRevenue(LocalDate date) {
         LocalDateTime start = date.atStartOfDay();

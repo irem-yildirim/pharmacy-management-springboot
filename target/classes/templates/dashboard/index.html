@@ -1,0 +1,260 @@
+<!-- src/main/resources/templates/dashboard/index.html -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(~{::main})}">
+<body>
+    <main class="space-y-8">
+        
+        <!-- Welcome Section -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <h2 class="text-2xl font-bold text-slate-900">Dashboard</h2>
+                <p class="text-sm text-slate-500">Real-time status overview of your pharmacy metrics and alerts</p>
+            </div>
+            
+            <button onclick="fetchStats()" class="px-5 py-2.5 bg-white border border-slate-200 text-slate-700 font-semibold rounded-xl text-sm hover:bg-slate-50 transition duration-200 flex items-center gap-2 shadow-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M9 11l3-3m0 0l3 3m-3-3v12"/>
+                </svg>
+                <span>Refresh Stats</span>
+            </button>
+        </div>
+
+        <!-- Bento Grid: Analytical Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <!-- Today's Revenue Card -->
+            <div class="bg-white border border-slate-200/80 shadow-sm rounded-2xl p-6 hover:shadow-md hover:border-slate-300/80 transition-all duration-200 group">
+                <div class="flex items-center justify-between">
+                    <span class="text-sm font-semibold text-slate-400">Today's Revenue</span>
+                    <div class="p-3 bg-indigo-50 text-indigo-600 rounded-xl group-hover:scale-105 transition-transform duration-200">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <h3 id="revenue-placeholder" class="text-3xl font-extrabold text-slate-900 tracking-tight">$0.00</h3>
+                    <span class="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full mt-2 inline-block">Real-time value</span>
+                </div>
+            </div>
+
+            <!-- Today's Profit Card -->
+            <div class="bg-white border border-slate-200/80 shadow-sm rounded-2xl p-6 hover:shadow-md hover:border-slate-300/80 transition-all duration-200 group">
+                <div class="flex items-center justify-between">
+                    <span class="text-sm font-semibold text-slate-400">Today's Profit</span>
+                    <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl group-hover:scale-105 transition-transform duration-200">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <h3 id="profit-placeholder" class="text-3xl font-extrabold text-slate-900 tracking-tight">$0.00</h3>
+                    <span class="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full mt-2 inline-block">FIFO tracking enabled</span>
+                </div>
+            </div>
+
+            <!-- Low Stock Alerts Card -->
+            <div class="bg-white border border-slate-200/80 shadow-sm rounded-2xl p-6 hover:shadow-md hover:border-slate-300/80 transition-all duration-200 group">
+                <div class="flex items-center justify-between">
+                    <span class="text-sm font-semibold text-slate-400">Low Stock Drugs</span>
+                    <div class="p-3 bg-rose-50 text-rose-600 rounded-xl group-hover:scale-105 transition-transform duration-200">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <h3 id="low-stock-count" class="text-3xl font-extrabold text-slate-900 tracking-tight">0</h3>
+                    <span class="text-xs font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full mt-2 inline-block">Needs urgent alım</span>
+                </div>
+            </div>
+
+            <!-- Expiring Batches Card -->
+            <div class="bg-white border border-slate-200/80 shadow-sm rounded-2xl p-6 hover:shadow-md hover:border-slate-300/80 transition-all duration-200 group">
+                <div class="flex items-center justify-between">
+                    <span class="text-sm font-semibold text-slate-400">Critical Expiries</span>
+                    <div class="p-3 bg-amber-50 text-amber-600 rounded-xl group-hover:scale-105 transition-transform duration-200">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <h3 id="critical-expiries-count" class="text-3xl font-extrabold text-slate-900 tracking-tight">0</h3>
+                    <span class="text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full mt-2 inline-block">Under 30 days remaining</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bento Grid: Lower Content Sections -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            <!-- Low Stock Alerts Table Section -->
+            <div class="bg-white border border-slate-200/80 shadow-sm rounded-2xl overflow-hidden flex flex-col">
+                <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+                    <div>
+                        <h4 class="font-bold text-slate-950">Low Stock Drugs</h4>
+                        <p class="text-xs text-slate-400 font-medium mt-0.5">Drugs falling below dynamic stock thresholds</p>
+                    </div>
+                    <span class="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full">Automatic Trigger</span>
+                </div>
+                
+                <div class="flex-1 overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50/50 border-b border-slate-100 text-[11px] font-bold tracking-wider text-slate-400 uppercase">
+                                <th class="px-6 py-3">Drug</th>
+                                <th class="px-6 py-3">Barcode</th>
+                                <th class="px-6 py-3 text-center">Alert Limit</th>
+                                <th class="px-6 py-3 text-right">In Stock</th>
+                            </tr>
+                        </thead>
+                        <tbody id="low-stock-table-body" class="text-sm divide-y divide-slate-100 text-slate-700">
+                            <!-- Populated dynamically via AJAX -->
+                            <tr>
+                                <td colspan="4" class="px-6 py-8 text-center text-slate-400 font-medium">Loading stock data...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Critical Expiry Batches Section -->
+            <div class="bg-white border border-slate-200/80 shadow-sm rounded-2xl overflow-hidden flex flex-col">
+                <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+                    <div>
+                        <h4 class="font-bold text-slate-950">Critical Expiry Batches</h4>
+                        <p class="text-xs text-slate-400 font-medium mt-0.5">FIFO stock batches expiring within 30 days</p>
+                    </div>
+                    <span class="text-xs font-semibold text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full">Strict FIFO Check</span>
+                </div>
+
+                <div class="flex-1 overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50/50 border-b border-slate-100 text-[11px] font-bold tracking-wider text-slate-400 uppercase">
+                                <th class="px-6 py-3">Drug</th>
+                                <th class="px-6 py-3">Expiry Date</th>
+                                <th class="px-6 py-3 text-center">Remaining</th>
+                                <th class="px-6 py-3 text-right">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="expiry-table-body" class="text-sm divide-y divide-slate-100 text-slate-700">
+                            <!-- Populated dynamically via AJAX -->
+                            <tr>
+                                <td colspan="4" class="px-6 py-8 text-center text-slate-400 font-medium">Loading batch data...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Dashboard JavaScript Client Logic -->
+        <script>
+            // Fetch analytical statistics via REST endpoint
+            async function fetchStats() {
+                try {
+                    const response = await fetch('/api/dashboard/stats');
+                    if (response.ok) {
+                        const data = await response.json();
+                        
+                        // Populate placeholder elements dynamically
+                        const revenue = data.dailyRevenue !== null && data.dailyRevenue !== undefined ? data.dailyRevenue : 0.00;
+                        const profit = data.dailyProfit !== null && data.dailyProfit !== undefined ? data.dailyProfit : 0.00;
+                        
+                        document.getElementById('revenue-placeholder').textContent = `$${parseFloat(revenue).toFixed(2)}`;
+                        document.getElementById('profit-placeholder').textContent = `$${parseFloat(profit).toFixed(2)}`;
+                        
+                        showToast('Dashboard stats updated', 'success');
+                    } else {
+                        showToast('Failed to fetch dashboard stats', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error fetching dashboard stats:', error);
+                    showToast('Connection error to stats server', 'error');
+                }
+            }
+
+            // Fetch alert data from REST and populate UI tables
+            async function loadAlerts() {
+                try {
+                    // Fetch list of active drugs to evaluate low stock alerts
+                    const drugRes = await fetch('/api/drugs');
+                    if (drugRes.ok) {
+                        const drugs = await drugRes.json();
+                        
+                        // We will display dynamic stock thresholds.
+                        // Note: actual stock is accumulated per drug from batches in production environment.
+                        // Below is an asynchronous REST mock handler to show actual aesthetic layout placeholder details.
+                        const lowStockTable = document.getElementById('low-stock-table-body');
+                        const lowStockCountEl = document.getElementById('low-stock-count');
+                        
+                        let lowStockHtml = '';
+                        let lowStockCount = 0;
+
+                        // Mock demo alert items to populate modern UI safely for Step 4 Front-End preview
+                        const demoAlerts = [
+                            { name: 'Paracetamol 500mg', barcode: '8699500000012', alertLimit: 20, currentStock: 8 },
+                            { name: 'Amoxicillin Oral Susp', barcode: '8699500000029', alertLimit: 15, currentStock: 4 }
+                        ];
+
+                        demoAlerts.forEach(alert => {
+                            lowStockHtml += `
+                                <tr class="hover:bg-slate-50/50 transition">
+                                    <td class="px-6 py-4 font-semibold text-slate-900">${alert.name}</td>
+                                    <td class="px-6 py-4 font-mono text-xs text-slate-400">${alert.barcode}</td>
+                                    <td class="px-6 py-4 text-center text-slate-500 font-medium">${alert.alertLimit}</td>
+                                    <td class="px-6 py-4 text-right"><span class="px-2.5 py-1 bg-rose-50 text-rose-600 rounded-full font-bold text-xs">${alert.currentStock} units</span></td>
+                                </tr>
+                            `;
+                            lowStockCount++;
+                        });
+
+                        lowStockTable.innerHTML = lowStockHtml;
+                        lowStockCountEl.textContent = lowStockCount;
+
+                        // Demo expiration alerts for premium visual rendering
+                        const expiryTable = document.getElementById('expiry-table-body');
+                        const expiryCountEl = document.getElementById('critical-expiries-count');
+                        
+                        const demoExpiries = [
+                            { name: 'Ibuprofen 400mg', date: '2026-06-10', remaining: 45, status: 'CRITICAL' },
+                            { name: 'Aspirin Cardio 100mg', date: '2026-05-18', remaining: 12, status: 'EXPIRED' }
+                        ];
+
+                        let expiryHtml = '';
+                        let expiryCount = 0;
+
+                        demoExpiries.forEach(batch => {
+                            const badgeColor = batch.status === 'EXPIRED' ? 'bg-rose-50 text-rose-600' : 'bg-amber-50 text-amber-600';
+                            expiryHtml += `
+                                <tr class="hover:bg-slate-50/50 transition">
+                                    <td class="px-6 py-4 font-semibold text-slate-900">${batch.name}</td>
+                                    <td class="px-6 py-4 font-mono text-xs text-slate-500">${batch.date}</td>
+                                    <td class="px-6 py-4 text-center font-medium text-slate-500">${batch.remaining} units</td>
+                                    <td class="px-6 py-4 text-right"><span class="px-2.5 py-1 rounded-full font-bold text-xs ${badgeColor}">${batch.status}</span></td>
+                                </tr>
+                            `;
+                            expiryCount++;
+                        });
+
+                        expiryTable.innerHTML = expiryHtml;
+                        expiryCountEl.textContent = expiryCount;
+                    }
+                } catch (error) {
+                    console.error('Error loading dashboard table data:', error);
+                }
+            }
+
+            // Initial execution on layout render complete
+            window.addEventListener('DOMContentLoaded', () => {
+                fetchStats();
+                loadAlerts();
+            });
+        </script>
+    </main>
+</body>
+</html>
