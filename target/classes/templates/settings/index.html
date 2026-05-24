@@ -23,7 +23,7 @@
                     class="px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 text-slate-500 hover:text-slate-900">
                 Categories
             </button>
-            <button onclick="switchTab('staff-tab')" id="tab-staff" 
+            <button th:if="${user != null and user.role.name() == 'ADMIN'}" onclick="switchTab('staff-tab')" id="tab-staff" 
                     class="px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 text-slate-500 hover:text-slate-900">
                 Staff Management
             </button>
@@ -109,8 +109,8 @@
             </div>
         </div>
 
-        <!-- TAB 3: Staff Management Panel -->
-        <div id="staff-tab" class="hidden">
+        <!-- TAB 3: Staff Management Panel (ADMIN only) -->
+        <div th:if="${user != null and user.role.name() == 'ADMIN'}" id="staff-tab" class="hidden">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 <!-- Left: Create Form -->
                 <div class="lg:col-span-4 bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-100/40 p-8 h-fit">
@@ -175,23 +175,28 @@
             </div>
         </div>
 
-    </main>
-
-    <!-- Settings Logic Script -->
-    <script>
-        // Tab switching and dynamic highlighting
+        <!-- Settings Logic Script -->
+        <script>
+        // Tab switching and dynamic highlighting using class toggling
         function switchTab(tabId) {
-            const tabs = ['brands-tab', 'categories-tab', 'staff-tab'];
-            tabs.forEach(t => {
-                const element = document.getElementById(t);
-                const btn = document.getElementById('tab-' + t.split('-')[0]);
-                if (t === tabId) {
-                    element.classList.remove('hidden');
-                    btn.className = "px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 bg-white text-indigo-600 shadow-sm animate-fade-in";
-                } else {
-                    element.classList.add('hidden');
-                    btn.className = "px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 text-slate-500 hover:text-slate-900";
-                }
+            const tabMap = {
+                'brands-tab': 'tab-brands',
+                'categories-tab': 'tab-categories'
+            };
+            const staffTab = document.getElementById('staff-tab');
+            const staffBtn = document.getElementById('tab-staff');
+            if (staffTab && staffBtn) {
+                tabMap['staff-tab'] = 'tab-staff';
+            }
+            Object.keys(tabMap).forEach(id => {
+                const element = document.getElementById(id);
+                const btn = document.getElementById(tabMap[id]);
+                if (!element || !btn) return;
+                const isActive = id === tabId;
+                element.classList.toggle('hidden', !isActive);
+                btn.className = isActive
+                    ? "px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 bg-white text-indigo-600 shadow-sm"
+                    : "px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 text-slate-500 hover:text-slate-900";
             });
         }
 
@@ -350,6 +355,7 @@
         // --- STAFF MANAGEMENT CRUD ---
         async function fetchStaff() {
             const tbody = document.getElementById('staff-table-body');
+            if (!tbody) return;
             try {
                 const res = await fetch('/api/users');
                 if (!res.ok) throw new Error("Failed to load");
@@ -376,40 +382,43 @@
             }
         }
 
-        document.getElementById('staff-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const btn = document.getElementById('staff-submit');
-            const name = document.getElementById('staff-name').value;
-            const username = document.getElementById('staff-username').value;
-            const password = document.getElementById('staff-password').value;
-            const role = document.getElementById('staff-role').value;
+        const staffForm = document.getElementById('staff-form');
+        if (staffForm) {
+            staffForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const btn = document.getElementById('staff-submit');
+                const name = document.getElementById('staff-name').value;
+                const username = document.getElementById('staff-username').value;
+                const password = document.getElementById('staff-password').value;
+                const role = document.getElementById('staff-role').value;
 
-            btn.disabled = true;
-            try {
-                const res = await fetch('/api/users', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        name: name,
-                        username: username,
-                        password: password,
-                        role: role
-                    })
-                });
-                if (res.ok) {
-                    window.showToast("Staff user registered successfully!");
-                    document.getElementById('staff-form').reset();
-                    fetchStaff();
-                } else {
-                    const txt = await res.text();
-                    window.showToast(txt || "Failed to register user.", "error");
+                btn.disabled = true;
+                try {
+                    const res = await fetch('/api/users', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            name: name,
+                            username: username,
+                            password: password,
+                            role: role
+                        })
+                    });
+                    if (res.ok) {
+                        window.showToast("Staff user registered successfully!");
+                        document.getElementById('staff-form').reset();
+                        fetchStaff();
+                    } else {
+                        const txt = await res.text();
+                        window.showToast(txt || "Failed to register user.", "error");
+                    }
+                } catch (err) {
+                    window.showToast("Network error.", "error");
+                } finally {
+                    btn.disabled = false;
                 }
-            } catch (err) {
-                window.showToast("Network error.", "error");
-            } finally {
-                btn.disabled = false;
-            }
-        });
+            });
+        }
 
         // Initialize on load
         window.addEventListener('DOMContentLoaded', () => {
@@ -418,5 +427,6 @@
             fetchStaff();
         });
     </script>
+    </main>
 </body>
 </html>

@@ -166,168 +166,163 @@
             </div>
         </div>
 
-    </main>
+        <!-- Purchase Logic Script -->
+        <script>
+            // Tab switching logic using class toggling
+            function switchTab(mode) {
+                const existingMode = document.getElementById('existing-mode');
+                const newMode = document.getElementById('new-mode');
+                const tabExisting = document.getElementById('tab-existing');
+                const tabNew = document.getElementById('tab-new');
+                const isExisting = mode === 'existing-mode';
 
-    <!-- Purchase Logic Script -->
-    <script>
-        // Tab switching logic
-        function switchTab(mode) {
-            if (mode === 'existing-mode') {
-                document.getElementById('existing-mode').classList.remove('hidden');
-                document.getElementById('new-mode').classList.add('hidden');
-                document.getElementById('tab-existing').className = "px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 bg-white text-indigo-600 shadow-sm";
-                document.getElementById('tab-new').className = "px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 text-slate-500 hover:text-slate-900";
-            } else {
-                document.getElementById('existing-mode').classList.add('hidden');
-                document.getElementById('new-mode').classList.remove('hidden');
-                document.getElementById('tab-existing').className = "px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 text-slate-500 hover:text-slate-900";
-                document.getElementById('tab-new').className = "px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 bg-white text-indigo-600 shadow-sm";
+                existingMode.classList.toggle('hidden', !isExisting);
+                newMode.classList.toggle('hidden', isExisting);
+
+                tabExisting.className = isExisting
+                    ? "px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 bg-white text-indigo-600 shadow-sm"
+                    : "px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 text-slate-500 hover:text-slate-900";
+                tabNew.className = isExisting
+                    ? "px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 text-slate-500 hover:text-slate-900"
+                    : "px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 bg-white text-indigo-600 shadow-sm";
             }
-        }
 
-        // Fetch utilities on load
-        async function loadSelectors() {
-            try {
-                // Fetch Drugs
-                const drugRes = await fetch('/api/drugs');
-                const drugs = await drugRes.json();
-                const drugSelect = document.getElementById('existing-drug-select');
-                drugSelect.innerHTML = '<option value="">Choose a drug...</option>';
-                drugs.forEach(d => {
-                    drugSelect.innerHTML += `<option value="${d.barcode}">${d.name} (${d.barcode})</option>`;
-                });
+            // Fetch utilities on load
+            async function loadSelectors() {
+                try {
+                    const drugRes = await fetch('/api/drugs');
+                    const drugs = await drugRes.json();
+                    const drugSelect = document.getElementById('existing-drug-select');
+                    drugSelect.innerHTML = '<option value="">Choose a drug...</option>';
+                    drugs.forEach(d => {
+                        drugSelect.innerHTML += `<option value="${d.barcode}">${d.name} (${d.barcode})</option>`;
+                    });
 
-                // Fetch Categories
-                const catRes = await fetch('/api/categories');
-                const categories = await catRes.json();
-                const catSelect = document.getElementById('new-category');
-                catSelect.innerHTML = '<option value="">Select Category...</option>';
-                categories.forEach(c => {
-                    catSelect.innerHTML += `<option value="${c.id}">${c.name}</option>`;
-                });
+                    const catRes = await fetch('/api/categories');
+                    const categories = await catRes.json();
+                    const catSelect = document.getElementById('new-category');
+                    catSelect.innerHTML = '<option value="">Select Category...</option>';
+                    categories.forEach(c => {
+                        catSelect.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+                    });
 
-                // Fetch Brands
-                const brandRes = await fetch('/api/brands');
-                const brands = await brandRes.json();
-                const brandSelect = document.getElementById('new-brand');
-                brandSelect.innerHTML = '<option value="">Select Brand...</option>';
-                brands.forEach(b => {
-                    brandSelect.innerHTML += `<option value="${b.id}">${b.name}</option>`;
-                });
-            } catch (err) {
-                console.error("Failed to load select parameters", err);
-                window.showToast("Failed to initialize dropdown selectors.", "error");
-            }
-        }
-
-        // Form 1: Existing Stock Purchase
-        document.getElementById('existing-drug-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const barcode = document.getElementById('existing-drug-select').value;
-            const qty = parseInt(document.getElementById('existing-qty').value);
-            const price = parseFloat(document.getElementById('existing-price').value);
-            const expiry = document.getElementById('existing-expiry').value;
-            const btn = document.getElementById('existing-submit-btn');
-
-            btn.disabled = true;
-            try {
-                const res = await fetch('/api/purchases', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        drugBarcode: barcode,
-                        quantity: qty,
-                        purchasePrice: price,
-                        expirationDate: expiry
-                    })
-                });
-
-                if (res.ok) {
-                    window.showToast("Purchase batch added successfully!");
-                    document.getElementById('existing-drug-form').reset();
-                    loadSelectors();
-                } else {
-                    const txt = await res.text();
-                    window.showToast(txt || "Failed to register purchase.", "error");
+                    const brandRes = await fetch('/api/brands');
+                    const brands = await brandRes.json();
+                    const brandSelect = document.getElementById('new-brand');
+                    brandSelect.innerHTML = '<option value="">Select Brand...</option>';
+                    brands.forEach(b => {
+                        brandSelect.innerHTML += `<option value="${b.id}">${b.name}</option>`;
+                    });
+                } catch (err) {
+                    console.error("Failed to load select parameters", err);
+                    window.showToast("Failed to initialize dropdown selectors.", "error");
                 }
-            } catch (err) {
-                window.showToast("Server connection error.", "error");
-            } finally {
-                btn.disabled = false;
             }
-        });
 
-        // Form 2: Register New Drug and Initial Purchase Batch
-        document.getElementById('new-drug-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const btn = document.getElementById('new-submit-btn');
+            document.getElementById('existing-drug-form').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const barcode = document.getElementById('existing-drug-select').value;
+                const qty = parseInt(document.getElementById('existing-qty').value);
+                const price = parseFloat(document.getElementById('existing-price').value);
+                const expiry = document.getElementById('existing-expiry').value;
+                const btn = document.getElementById('existing-submit-btn');
 
-            const barcode = document.getElementById('new-barcode').value;
-            const name = document.getElementById('new-name').value;
-            const categoryId = parseInt(document.getElementById('new-category').value);
-            const brandId = parseInt(document.getElementById('new-brand').value);
-            const presTypeId = parseInt(document.getElementById('new-pres-type').value);
-            const sellingPrice = parseFloat(document.getElementById('new-selling-price').value);
-            const minStock = parseInt(document.getElementById('new-min-stock').value);
+                btn.disabled = true;
+                try {
+                    const res = await fetch('/api/purchases', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            drugBarcode: barcode,
+                            quantity: qty,
+                            purchasePrice: price,
+                            expirationDate: expiry
+                        })
+                    });
 
-            const qty = parseInt(document.getElementById('new-qty').value);
-            const purchasePrice = parseFloat(document.getElementById('new-purchase-price').value);
-            const expiry = document.getElementById('new-expiry').value;
-
-            btn.disabled = true;
-            try {
-                // Step A: Save new Drug
-                const drugRes = await fetch('/api/drugs', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        barcode: barcode,
-                        name: name,
-                        categoryId: categoryId,
-                        brandId: brandId,
-                        presTypeId: presTypeId,
-                        currentSellingPrice: sellingPrice,
-                        minStockAlert: minStock
-                    })
-                });
-
-                if (!drugRes.ok) {
-                    const txt = await drugRes.text();
-                    window.showToast(txt || "Failed to save new drug specifications.", "error");
+                    if (res.ok) {
+                        window.showToast("Purchase batch added successfully!");
+                        document.getElementById('existing-drug-form').reset();
+                        loadSelectors();
+                    } else {
+                        const txt = await res.text();
+                        window.showToast(txt || "Failed to register purchase.", "error");
+                    }
+                } catch (err) {
+                    window.showToast("Server connection error.", "error");
+                } finally {
                     btn.disabled = false;
-                    return;
                 }
+            });
 
-                // Step B: Save initial Stock batch
-                const purchaseRes = await fetch('/api/purchases', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        drugBarcode: barcode,
-                        quantity: qty,
-                        purchasePrice: purchasePrice,
-                        expirationDate: expiry
-                    })
-                });
+            document.getElementById('new-drug-form').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const btn = document.getElementById('new-submit-btn');
 
-                if (purchaseRes.ok) {
-                    window.showToast("Drug and its initial stock registered successfully!");
-                    document.getElementById('new-drug-form').reset();
-                    loadSelectors();
-                    switchTab('existing-mode');
-                } else {
-                    const txt = await purchaseRes.text();
-                    window.showToast(txt || "Failed to save initial stock batch.", "error");
+                const barcode = document.getElementById('new-barcode').value;
+                const name = document.getElementById('new-name').value;
+                const categoryId = parseInt(document.getElementById('new-category').value);
+                const brandId = parseInt(document.getElementById('new-brand').value);
+                const presTypeId = parseInt(document.getElementById('new-pres-type').value);
+                const sellingPrice = parseFloat(document.getElementById('new-selling-price').value);
+                const minStock = parseInt(document.getElementById('new-min-stock').value);
+
+                const qty = parseInt(document.getElementById('new-qty').value);
+                const purchasePrice = parseFloat(document.getElementById('new-purchase-price').value);
+                const expiry = document.getElementById('new-expiry').value;
+
+                btn.disabled = true;
+                try {
+                    const drugRes = await fetch('/api/drugs', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            barcode: barcode,
+                            name: name,
+                            categoryId: categoryId,
+                            brandId: brandId,
+                            presTypeId: presTypeId,
+                            currentSellingPrice: sellingPrice,
+                            minStockAlert: minStock
+                        })
+                    });
+
+                    if (!drugRes.ok) {
+                        const txt = await drugRes.text();
+                        window.showToast(txt || "Failed to save new drug specifications.", "error");
+                        btn.disabled = false;
+                        return;
+                    }
+
+                    const purchaseRes = await fetch('/api/purchases', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            drugBarcode: barcode,
+                            quantity: qty,
+                            purchasePrice: purchasePrice,
+                            expirationDate: expiry
+                        })
+                    });
+
+                    if (purchaseRes.ok) {
+                        window.showToast("Drug and its initial stock registered successfully!");
+                        document.getElementById('new-drug-form').reset();
+                        loadSelectors();
+                        switchTab('existing-mode');
+                    } else {
+                        const txt = await purchaseRes.text();
+                        window.showToast(txt || "Failed to save initial stock batch.", "error");
+                    }
+                } catch (err) {
+                    window.showToast("Server connection error.", "error");
+                } finally {
+                    btn.disabled = false;
                 }
-            } catch (err) {
-                window.showToast("Server connection error.", "error");
-            } finally {
-                btn.disabled = false;
-            }
-        });
+            });
 
-        // Initialize selectors on load
-        window.addEventListener('DOMContentLoaded', loadSelectors);
-    </script>
+            window.addEventListener('DOMContentLoaded', loadSelectors);
+        </script>
+    </main>
 </body>
 </html>

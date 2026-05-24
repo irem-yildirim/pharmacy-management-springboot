@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/purchases")
@@ -38,8 +39,8 @@ public class PurchaseController {
                 .purchaseDate(LocalDate.now())
                 .build();
 
-        Purchase saved = purchaseRepository.save(purchase);
-        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+        purchaseRepository.save(purchase);
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("message", "Purchase batch created", "drugBarcode", request.getDrugBarcode()));
     }
 
     @Data

@@ -34,7 +34,7 @@ public class BrandController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable Long id) {
         if (drugRepository.existsByBrand_Id(id)) {
-            return ResponseEntity.badRequest().body("Linked drugs exist!");
+            return ResponseEntity.badRequest().body("Cannot delete: This brand has linked drugs. Remove or reassign them first.");
         }
         brandRepository.findById(id).ifPresent(brand -> {
             brand.setIsActive(false);

@@ -80,10 +80,8 @@
             </div>
         </div>
 
-    </main>
-
-    <!-- Customer Logic Script -->
-    <script>
+        <!-- Customer Logic Script -->
+        <script>
         // Modal toggler
         function toggleModal(show) {
             const modal = document.getElementById('addCustomerModal');
@@ -106,6 +104,10 @@
             const tbody = document.getElementById('customer-table-body');
             try {
                 const response = await fetch('/api/customers');
+                if (!response.ok) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="py-12 text-center text-rose-500 font-semibold">Failed to fetch customer list.</td></tr>`;
+                    return;
+                }
                 const customers = await response.json();
 
                 if (customers.length === 0) {
@@ -182,5 +184,6 @@
         // Load customers on start
         window.addEventListener('DOMContentLoaded', fetchCustomers);
     </script>
+    </main>
 </body>
 </html>

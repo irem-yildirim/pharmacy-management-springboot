@@ -34,7 +34,7 @@ public class CategoryController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable Long id) {
         if (drugRepository.existsByCategory_Id(id)) {
-            return ResponseEntity.badRequest().body("Linked drugs exist!");
+            return ResponseEntity.badRequest().body("Cannot delete: This category has linked drugs. Remove or reassign them first.");
         }
         categoryRepository.findById(id).ifPresent(category -> {
             category.setIsActive(false);
