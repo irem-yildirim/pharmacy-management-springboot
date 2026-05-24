@@ -1,6 +1,6 @@
 package com.pharmacy.config;
 
-import com.pharmacy.entity.User;
+import com.pharmacy.model.User;
 import com.pharmacy.repository.UserRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

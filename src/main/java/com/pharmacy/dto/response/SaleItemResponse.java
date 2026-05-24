@@ -1,6 +1,6 @@
 package com.pharmacy.dto.response;
 
-import com.pharmacy.entity.SaleItem;
+import com.pharmacy.model.SaleItem;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import lombok.*;

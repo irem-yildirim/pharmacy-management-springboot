@@ -1,6 +1,6 @@
 package com.pharmacy.dto.response;
 
-import com.pharmacy.entity.Drug;
+import com.pharmacy.model.Drug;
 import java.math.BigDecimal;
 import java.util.List;
 import lombok.*;

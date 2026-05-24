@@ -1,6 +1,6 @@
 package com.pharmacy.config;
 
-import com.pharmacy.entity.User;
+import com.pharmacy.model.User;
 import lombok.Getter;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 

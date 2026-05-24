@@ -1,9 +1,9 @@
 package com.pharmacy.service;
 
-import com.pharmacy.entity.*;
-import com.pharmacy.exception.DrugNotFoundException;
-import com.pharmacy.exception.InsufficientStockException;
-import com.pharmacy.exception.PrescriptionRequiredException;
+import com.pharmacy.model.*;
+import com.pharmacy.advice.DrugNotFoundException;
+import com.pharmacy.advice.InsufficientStockException;
+import com.pharmacy.advice.PrescriptionRequiredException;
 import com.pharmacy.repository.*;
 import com.pharmacy.dto.request.SaleItemRequest;
 import org.junit.jupiter.api.BeforeEach;

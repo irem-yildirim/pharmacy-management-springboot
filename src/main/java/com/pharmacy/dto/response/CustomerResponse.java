@@ -1,6 +1,6 @@
 package com.pharmacy.dto.response;
 
-import com.pharmacy.entity.Customer;
+import com.pharmacy.model.Customer;
 import java.math.BigDecimal;
 import lombok.*;
 

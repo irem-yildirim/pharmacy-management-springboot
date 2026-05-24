@@ -1,7 +1,7 @@
 package com.pharmacy.service;
 
-import com.pharmacy.entity.Drug;
-import com.pharmacy.exception.DrugNotFoundException;
+import com.pharmacy.model.Drug;
+import com.pharmacy.advice.DrugNotFoundException;
 import com.pharmacy.repository.DrugRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
