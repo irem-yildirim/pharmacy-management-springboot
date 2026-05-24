@@ -1,9 +1,7 @@
 package com.pharmacy.rest;
 
-import com.pharmacy.model.Drug;
 import com.pharmacy.model.Purchase;
-import com.pharmacy.repository.DrugRepository;
-import com.pharmacy.repository.PurchaseRepository;
+import com.pharmacy.service.PurchaseService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -23,28 +21,18 @@ import java.util.Map;
 @Tag(name = "Purchases", description = "Stock batch procurement and inventory intake")
 public class PurchaseController {
 
-    private final PurchaseRepository purchaseRepository;
-    private final DrugRepository drugRepository;
+    private final PurchaseService purchaseService;
 
     @PostMapping
     @Operation(summary = "Create a purchase batch", description = "Records a new stock intake batch for an existing drug")
-    public ResponseEntity<?> createPurchase(@Valid @RequestBody PurchaseBatchRequest request) {
-        Drug drug = drugRepository.findById(request.getDrugBarcode()).orElse(null);
-        if (drug == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Drug not found with barcode: " + request.getDrugBarcode());
-        }
-
-        Purchase purchase = Purchase.builder()
-                .drug(drug)
-                .originalQuantity(request.getQuantity())
-                .remainingQuantity(request.getQuantity())
-                .purchasePrice(request.getPurchasePrice())
-                .expirationDate(request.getExpirationDate())
-                .purchaseDate(LocalDate.now())
-                .build();
-
-        purchaseRepository.save(purchase);
-        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("message", "Purchase batch created", "drugBarcode", request.getDrugBarcode()));
+    public ResponseEntity<Map<String, Object>> createPurchase(@Valid @RequestBody PurchaseBatchRequest request) {
+        Purchase purchase = purchaseService.createPurchase(
+                request.getDrugBarcode(),
+                request.getQuantity(),
+                request.getPurchasePrice(),
+                request.getExpirationDate());
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(Map.of("message", "Purchase batch created", "drugBarcode", purchase.getDrug().getBarcode()));
     }
 
     @Data

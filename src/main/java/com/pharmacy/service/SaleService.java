@@ -12,6 +12,7 @@ import com.pharmacy.repository.DrugRepository;
 import com.pharmacy.repository.PurchaseRepository;
 import com.pharmacy.repository.SaleRepository;
 import com.pharmacy.repository.CustomerRepository;
+import com.pharmacy.repository.UserRepository;
 import com.pharmacy.model.Customer;
 import com.pharmacy.model.User;
 import lombok.RequiredArgsConstructor;
@@ -31,9 +32,12 @@ public class SaleService {
     private final DrugRepository drugRepository;
     private final PurchaseRepository purchaseRepository;
     private final CustomerRepository customerRepository;
+    private final UserRepository userRepository;
 
     @Transactional
-    public Sale createSale(List<SaleItemRequest> requests, boolean prescriptionLogged, Long customerId, User user) {
+    public Sale createSale(List<SaleItemRequest> requests, boolean prescriptionLogged, Long customerId, Long userId) {
+        User user = userRepository.findById(userId).orElse(null);
+
         Sale sale = Sale.builder()
                 .saleDate(LocalDateTime.now())
                 .isPrescriptionLogged(prescriptionLogged)
@@ -49,7 +53,6 @@ public class SaleService {
                     .filter(Drug::getIsActive)
                     .orElseThrow(() -> new DrugNotFoundException("Drug not found with barcode: " + request.getBarcode()));
 
-            // Prescription check: riskLevel >= 1 requires prescription info
             if (drug.getPresType() != null
                     && drug.getPresType().getRiskLevel() != null
                     && drug.getPresType().getRiskLevel() >= 1
@@ -81,7 +84,6 @@ public class SaleService {
         return saleRepository.save(sale);
     }
 
-    // FIFO: deduct requested quantity from oldest-expiry batches first
     private List<SaleItem> deductFromBatches(Drug drug, int requestedQty, Sale sale) {
         List<Purchase> batches = purchaseRepository
                 .findByDrug_BarcodeAndRemainingQuantityGreaterThanOrderByExpirationDateAsc(

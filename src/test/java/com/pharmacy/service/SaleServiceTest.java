@@ -33,6 +33,8 @@ class SaleServiceTest {
     private PurchaseRepository purchaseRepository;
     @Mock
     private CustomerRepository customerRepository;
+    @Mock
+    private UserRepository userRepository;
 
     @InjectMocks
     private SaleService saleService;
@@ -88,8 +90,9 @@ class SaleServiceTest {
         when(purchaseRepository.findByDrug_BarcodeAndRemainingQuantityGreaterThanOrderByExpirationDateAsc(
                 "8690000000001", 0)).thenReturn(List.of(batchOld, batchNew));
         when(saleRepository.save(any(Sale.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(sampleUser));
 
-        Sale sale = saleService.createSale(List.of(request), false, null, sampleUser);
+        Sale sale = saleService.createSale(List.of(request), false, null, 1L);
 
         assertEquals(new BigDecimal("273.00"), sale.getTotalAmount());
         assertEquals(2, sale.getItems().size());
@@ -108,8 +111,9 @@ class SaleServiceTest {
         when(purchaseRepository.findByDrug_BarcodeAndRemainingQuantityGreaterThanOrderByExpirationDateAsc(
                 "8690000000001", 0)).thenReturn(List.of(batchOld, batchNew));
         when(saleRepository.save(any(Sale.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(sampleUser));
 
-        Sale sale = saleService.createSale(List.of(request), false, null, sampleUser);
+        Sale sale = saleService.createSale(List.of(request), false, null, 1L);
 
         assertEquals(new BigDecimal("136.50"), sale.getTotalAmount());
         assertEquals(1, sale.getItems().size());
@@ -123,18 +127,20 @@ class SaleServiceTest {
         when(drugRepository.findById("8690000000001")).thenReturn(Optional.of(sampleDrug));
         when(purchaseRepository.findByDrug_BarcodeAndRemainingQuantityGreaterThanOrderByExpirationDateAsc(
                 "8690000000001", 0)).thenReturn(List.of(batchOld, batchNew));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(sampleUser));
 
         assertThrows(InsufficientStockException.class,
-                () -> saleService.createSale(List.of(request), false, null, sampleUser));
+                () -> saleService.createSale(List.of(request), false, null, 1L));
     }
 
     @Test
     void testDrugNotFound() {
         SaleItemRequest request = new SaleItemRequest("9999999999999", 1);
         when(drugRepository.findById("9999999999999")).thenReturn(Optional.empty());
+        when(userRepository.findById(1L)).thenReturn(Optional.of(sampleUser));
 
         assertThrows(DrugNotFoundException.class,
-                () -> saleService.createSale(List.of(request), false, null, sampleUser));
+                () -> saleService.createSale(List.of(request), false, null, 1L));
     }
 
     @Test
@@ -147,21 +153,13 @@ class SaleServiceTest {
                 .currentSellingPrice(new BigDecimal("100.00"))
                 .isActive(true)
                 .build();
-        Purchase rxBatch = Purchase.builder()
-                .id(3L)
-                .drug(rxDrug)
-                .originalQuantity(10)
-                .remainingQuantity(10)
-                .purchasePrice(new BigDecimal("80.00"))
-                .expirationDate(LocalDate.now().plusDays(90))
-                .purchaseDate(LocalDate.now())
-                .build();
 
         SaleItemRequest request = new SaleItemRequest("8690000000002", 2);
         when(drugRepository.findById("8690000000002")).thenReturn(Optional.of(rxDrug));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(sampleUser));
 
         assertThrows(PrescriptionRequiredException.class,
-                () -> saleService.createSale(List.of(request), false, null, sampleUser));
+                () -> saleService.createSale(List.of(request), false, null, 1L));
     }
 
     @Test
@@ -189,8 +187,9 @@ class SaleServiceTest {
         when(purchaseRepository.findByDrug_BarcodeAndRemainingQuantityGreaterThanOrderByExpirationDateAsc(
                 "8690000000002", 0)).thenReturn(List.of(rxBatch));
         when(saleRepository.save(any(Sale.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(sampleUser));
 
-        Sale sale = saleService.createSale(List.of(request), true, null, sampleUser);
+        Sale sale = saleService.createSale(List.of(request), true, null, 1L);
 
         assertNotNull(sale);
         assertTrue(sale.getIsPrescriptionLogged());
@@ -211,8 +210,9 @@ class SaleServiceTest {
                 "8690000000001", 0)).thenReturn(List.of(batchOld));
         when(saleRepository.save(any(Sale.class))).thenAnswer(inv -> inv.getArgument(0));
         when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
+        when(userRepository.findById(1L)).thenReturn(Optional.of(sampleUser));
 
-        Sale sale = saleService.createSale(List.of(request), false, 1L, sampleUser);
+        Sale sale = saleService.createSale(List.of(request), false, 1L, 1L);
 
         assertNotNull(sale.getCustomer());
         assertEquals(new BigDecimal("45.50"), customer.getBalance());

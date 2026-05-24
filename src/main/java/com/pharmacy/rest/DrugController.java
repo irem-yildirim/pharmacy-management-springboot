@@ -7,8 +7,6 @@ import com.pharmacy.model.Brand;
 import com.pharmacy.model.Category;
 import com.pharmacy.model.Drug;
 import com.pharmacy.model.PresType;
-import com.pharmacy.model.Purchase;
-import com.pharmacy.repository.PurchaseRepository;
 import com.pharmacy.service.DrugService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -27,7 +25,6 @@ import org.springframework.web.bind.annotation.*;
 public class DrugController {
 
     private final DrugService drugService;
-    private final PurchaseRepository purchaseRepository;
 
     @GetMapping
     @Operation(summary = "List all active drugs", description = "Returns all active drugs with total stock and active purchase batches")
@@ -35,11 +32,9 @@ public class DrugController {
         List<DrugResponse> responses = drugService.findAllActive().stream()
                 .map(drug -> {
                     DrugResponse dto = DrugResponse.fromEntity(drug);
-                    int totalStock = purchaseRepository.sumRemainingByDrugBarcode(drug.getBarcode());
+                    int totalStock = drugService.getTotalStock(drug.getBarcode());
                     dto.setTotalStock(totalStock);
-                    List<Purchase> activeBatches = purchaseRepository
-                            .findByDrug_BarcodeAndRemainingQuantityGreaterThanOrderByExpirationDateAsc(drug.getBarcode(), 0);
-                    dto.setBatches(activeBatches.stream()
+                    dto.setBatches(drugService.getActiveBatches(drug.getBarcode()).stream()
                             .map(PurchaseBatchResponse::fromEntity)
                             .collect(Collectors.toList()));
                     return dto;
@@ -53,11 +48,9 @@ public class DrugController {
     public ResponseEntity<DrugResponse> getByBarcode(@PathVariable String barcode) {
         Drug drug = drugService.findByBarcode(barcode);
         DrugResponse dto = DrugResponse.fromEntity(drug);
-        int totalStock = purchaseRepository.sumRemainingByDrugBarcode(barcode);
+        int totalStock = drugService.getTotalStock(barcode);
         dto.setTotalStock(totalStock);
-        List<Purchase> activeBatches = purchaseRepository
-                .findByDrug_BarcodeAndRemainingQuantityGreaterThanOrderByExpirationDateAsc(barcode, 0);
-        dto.setBatches(activeBatches.stream()
+        dto.setBatches(drugService.getActiveBatches(barcode).stream()
                 .map(PurchaseBatchResponse::fromEntity)
                 .collect(Collectors.toList()));
         return ResponseEntity.ok(dto);

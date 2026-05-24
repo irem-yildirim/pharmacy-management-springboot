@@ -14,6 +14,17 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(CustomerNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleCustomerNotFound(CustomerNotFoundException ex) {
+        ErrorResponse response = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.NOT_FOUND.value())
+                .error(HttpStatus.NOT_FOUND.getReasonPhrase())
+                .message(ex.getMessage())
+                .build();
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
     @ExceptionHandler(DrugNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleDrugNotFound(DrugNotFoundException ex) {
         ErrorResponse response = ErrorResponse.builder()
@@ -45,6 +56,17 @@ public class GlobalExceptionHandler {
                 .message(ex.getMessage())
                 .build();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(DuplicateEntryException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicateEntry(DuplicateEntryException ex) {
+        ErrorResponse response = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.CONFLICT.value())
+                .error(HttpStatus.CONFLICT.getReasonPhrase())
+                .message(ex.getMessage())
+                .build();
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

@@ -1,8 +1,10 @@
 package com.pharmacy.service;
 
 import com.pharmacy.model.Drug;
+import com.pharmacy.model.Purchase;
 import com.pharmacy.advice.DrugNotFoundException;
 import com.pharmacy.repository.DrugRepository;
+import com.pharmacy.repository.PurchaseRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +16,7 @@ import java.util.List;
 public class DrugService {
 
     private final DrugRepository drugRepository;
+    private final PurchaseRepository purchaseRepository;
 
     public List<Drug> findAllActive() {
         return drugRepository.findByIsActiveTrue();
@@ -34,5 +37,13 @@ public class DrugService {
         Drug drug = findByBarcode(barcode);
         drug.setIsActive(false);
         drugRepository.save(drug);
+    }
+
+    public int getTotalStock(String barcode) {
+        return purchaseRepository.sumRemainingByDrugBarcode(barcode);
+    }
+
+    public List<Purchase> getActiveBatches(String barcode) {
+        return purchaseRepository.findByDrug_BarcodeAndRemainingQuantityGreaterThanOrderByExpirationDateAsc(barcode, 0);
     }
 }
