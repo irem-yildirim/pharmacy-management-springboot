@@ -66,7 +66,7 @@
                 </div>
                 <div class="mt-4">
                     <h3 id="low-stock-count" class="text-3xl font-extrabold text-slate-900 tracking-tight">0</h3>
-                    <span class="text-xs font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full mt-2 inline-block">Needs urgent alım</span>
+                    <span class="text-xs font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full mt-2 inline-block">Urgent restock needed</span>
                 </div>
             </div>
 
@@ -101,19 +101,19 @@
                 </div>
                 
                 <div class="flex-1 overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
+                    <table class="w-full text-left border-collapse table-fixed">
                         <thead>
                             <tr class="bg-slate-50/50 border-b border-slate-100 text-[11px] font-bold tracking-wider text-slate-400 uppercase">
-                                <th class="px-6 py-3">Drug</th>
-                                <th class="px-6 py-3">Barcode</th>
-                                <th class="px-6 py-3 text-center">Alert Limit</th>
-                                <th class="px-6 py-3 text-right">In Stock</th>
+                                <th class="px-4 py-3 w-[35%]">Drug</th>
+                                <th class="px-4 py-3 w-[30%]">Barcode</th>
+                                <th class="px-4 py-3 text-center whitespace-nowrap w-[17%]">Alert Limit</th>
+                                <th class="px-4 py-3 text-right whitespace-nowrap w-[18%]">In Stock</th>
                             </tr>
                         </thead>
                         <tbody id="low-stock-table-body" class="text-sm divide-y divide-slate-100 text-slate-700">
                             <!-- Populated dynamically via AJAX -->
                             <tr>
-                                <td colspan="4" class="px-6 py-8 text-center text-slate-400 font-medium">Loading stock data...</td>
+                                <td colspan="4" class="px-4 py-8 text-center text-slate-400 font-medium">Loading stock data...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -161,7 +161,6 @@
                     if (response.ok) {
                         const data = await response.json();
                         
-                        // Populate placeholder elements dynamically
                         const revenue = data.dailyRevenue !== null && data.dailyRevenue !== undefined ? data.dailyRevenue : 0.00;
                         const profit = data.dailyProfit !== null && data.dailyProfit !== undefined ? data.dailyProfit : 0.00;
                         
@@ -178,68 +177,75 @@
                 }
             }
 
-            // Fetch alert data from REST and populate UI tables
+            // Fetch live data from REST API and populate dashboard tables
             async function loadAlerts() {
                 try {
-                    // Fetch list of active drugs to evaluate low stock alerts
                     const drugRes = await fetch('/api/drugs');
                     if (drugRes.ok) {
                         const drugs = await drugRes.json();
                         
-                        // We will display dynamic stock thresholds.
-                        // Note: actual stock is accumulated per drug from batches in production environment.
-                        // Below is an asynchronous REST mock handler to show actual aesthetic layout placeholder details.
                         const lowStockTable = document.getElementById('low-stock-table-body');
                         const lowStockCountEl = document.getElementById('low-stock-count');
-                        
+                        const expiryTable = document.getElementById('expiry-table-body');
+                        const expiryCountEl = document.getElementById('critical-expiries-count');
+
+                        // Low stock alerts: drugs where totalStock < minStockAlert
                         let lowStockHtml = '';
                         let lowStockCount = 0;
 
-                        // Mock demo alert items to populate modern UI safely for Step 4 Front-End preview
-                        const demoAlerts = [
-                            { name: 'Paracetamol 500mg', barcode: '8699500000012', alertLimit: 20, currentStock: 8 },
-                            { name: 'Amoxicillin Oral Susp', barcode: '8699500000029', alertLimit: 15, currentStock: 4 }
-                        ];
-
-                        demoAlerts.forEach(alert => {
-                            lowStockHtml += `
-                                <tr class="hover:bg-slate-50/50 transition">
-                                    <td class="px-6 py-4 font-semibold text-slate-900">${alert.name}</td>
-                                    <td class="px-6 py-4 font-mono text-xs text-slate-400">${alert.barcode}</td>
-                                    <td class="px-6 py-4 text-center text-slate-500 font-medium">${alert.alertLimit}</td>
-                                    <td class="px-6 py-4 text-right"><span class="px-2.5 py-1 bg-rose-50 text-rose-600 rounded-full font-bold text-xs">${alert.currentStock} units</span></td>
-                                </tr>
-                            `;
-                            lowStockCount++;
+                        drugs.forEach(drug => {
+                            const stock = drug.totalStock !== null && drug.totalStock !== undefined ? drug.totalStock : 0;
+                            const alertLimit = drug.minStockAlert !== null && drug.minStockAlert !== undefined ? drug.minStockAlert : 10;
+                            if (stock < alertLimit) {
+                                lowStockHtml += `
+                                    <tr class="hover:bg-slate-50/50 transition">
+                                        <td class="px-4 py-4 font-semibold text-slate-900 truncate">${drug.name}</td>
+                                        <td class="px-4 py-4 font-mono text-xs text-slate-400">${drug.barcode}</td>
+                                        <td class="px-4 py-4 text-center text-slate-500 font-medium">${alertLimit}</td>
+                                        <td class="px-4 py-4 text-right"><span class="px-2.5 py-1 bg-rose-50 text-rose-600 rounded-full font-bold text-xs whitespace-nowrap">${stock} units</span></td>
+                                    </tr>
+                                `;
+                                lowStockCount++;
+                            }
                         });
+
+                        if (lowStockCount === 0) {
+                            lowStockHtml = '<tr><td colspan="4" class="px-6 py-8 text-center text-slate-400 font-medium">All drugs are above minimum stock levels.</td></tr>';
+                        }
 
                         lowStockTable.innerHTML = lowStockHtml;
                         lowStockCountEl.textContent = lowStockCount;
 
-                        // Demo expiration alerts for premium visual rendering
-                        const expiryTable = document.getElementById('expiry-table-body');
-                        const expiryCountEl = document.getElementById('critical-expiries-count');
-                        
-                        const demoExpiries = [
-                            { name: 'Ibuprofen 400mg', date: '2026-06-10', remaining: 45, status: 'CRITICAL' },
-                            { name: 'Aspirin Cardio 100mg', date: '2026-05-18', remaining: 12, status: 'EXPIRED' }
-                        ];
-
+                        // Critical expiry alerts: batches expiring within 30 days or already expired
                         let expiryHtml = '';
                         let expiryCount = 0;
+                        const today = new Date();
+                        const thirtyDaysLater = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
 
-                        demoExpiries.forEach(batch => {
-                            const badgeColor = batch.status === 'EXPIRED' ? 'bg-rose-50 text-rose-600' : 'bg-amber-50 text-amber-600';
-                            expiryHtml += `
-                                <tr class="hover:bg-slate-50/50 transition">
-                                    <td class="px-6 py-4 font-semibold text-slate-900">${batch.name}</td>
-                                    <td class="px-6 py-4 font-mono text-xs text-slate-500">${batch.date}</td>
-                                    <td class="px-6 py-4 text-center font-medium text-slate-500">${batch.remaining} units</td>
-                                    <td class="px-6 py-4 text-right"><span class="px-2.5 py-1 rounded-full font-bold text-xs ${badgeColor}">${batch.status}</span></td>
-                                </tr>
-                            `;
-                            expiryCount++;
+                        drugs.forEach(drug => {
+                            if (drug.batches && drug.batches.length > 0) {
+                                drug.batches.forEach(batch => {
+                                    const expDate = new Date(batch.expirationDate);
+                                    if (expDate <= thirtyDaysLater) {
+                                        const status = expDate < today ? 'EXPIRED' : 'CRITICAL';
+                                        const badgeColor = status === 'EXPIRED' ? 'bg-rose-50 text-rose-600' : 'bg-amber-50 text-amber-600';
+                                        expiryHtml += `
+                                            <tr class="hover:bg-slate-50/50 transition">
+                                                <td class="px-6 py-4 font-semibold text-slate-900">${drug.name}</td>
+                                                <td class="px-6 py-4 font-mono text-xs text-slate-500">${batch.expirationDate}</td>
+                                                <td class="px-6 py-4 text-center font-medium text-slate-500">${batch.remainingQuantity} units</td>
+                                                <td class="px-6 py-4 text-right"><span class="px-2.5 py-1 rounded-full font-bold text-xs ${badgeColor}">${status}</span></td>
+                                            </tr>
+                                        `;
+                                        expiryCount++;
+                                    }
+                                });
+                            }
                         });
+
+                        if (expiryCount === 0) {
+                            expiryHtml = '<tr><td colspan="4" class="px-6 py-8 text-center text-slate-400 font-medium">No critical expiry batches detected.</td></tr>';
+                        }
 
                         expiryTable.innerHTML = expiryHtml;
                         expiryCountEl.textContent = expiryCount;

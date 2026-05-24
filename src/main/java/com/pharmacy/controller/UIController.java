@@ -18,11 +18,11 @@ public class UIController {
 
     @GetMapping("/pos")
     public String pos() {
-        return "pos/sale";
+        return "pos/index";
     }
 
     @GetMapping("/inventory")
     public String inventory() {
-        return "inventory/list";
+        return "inventory/index";
     }
 }

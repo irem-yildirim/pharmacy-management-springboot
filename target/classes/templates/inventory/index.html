@@ -11,15 +11,6 @@
                 <h2 class="text-2xl font-bold text-slate-900">Inventory Management</h2>
                 <p class="text-sm text-slate-500">Track and manage active pharmaceutical items, prices, and stock configurations</p>
             </div>
-            
-            <div class="flex items-center gap-3">
-                <button onclick="openAddDrugModal()" class="px-5 py-3 bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98] text-white font-bold rounded-xl text-sm transition duration-200 flex items-center gap-2 shadow-md shadow-indigo-100 group">
-                    <svg class="w-4 h-4 text-indigo-100 transition-transform group-hover:rotate-90" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    <span>Add New Drug</span>
-                </button>
-            </div>
         </div>
 
         <!-- Inventory List Card -->
@@ -46,17 +37,18 @@
                 <table class="w-full text-left border-collapse" id="inventory-table">
                     <thead>
                         <tr class="bg-slate-50/50 border-b border-slate-100 text-[11px] font-bold tracking-wider text-slate-400 uppercase">
+                            <th class="px-4 py-4 w-10"></th>
                             <th class="px-6 py-4">Barcode</th>
                             <th class="px-6 py-4">Drug Name</th>
                             <th class="px-6 py-4">Category</th>
-                            <th class="px-6 py-4">Brand</th>
-                            <th class="px-6 py-4 text-right">Selling Price</th>
+                            <th class="px-6 py-4">Prescription Type</th>
+                            <th class="px-6 py-4 text-center">Total Stock</th>
                             <th class="px-6 py-4 text-center">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="text-sm divide-y divide-slate-100 text-slate-700" id="inventory-table-body">
                         <tr>
-                            <td colspan="6" class="px-6 py-12 text-center text-slate-400 font-medium">
+                            <td colspan="7" class="px-6 py-12 text-center text-slate-400 font-medium">
                                 <div class="flex flex-col items-center justify-center gap-2">
                                     <svg class="animate-spin w-8 h-8 text-indigo-500" fill="none" viewBox="0 0 24 24">
                                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -71,112 +63,10 @@
             </div>
         </div>
 
-        <!-- Add New Drug Modal Dialog (Hidden by Default) -->
-        <div id="add-drug-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-            <div class="bg-white border border-slate-200 shadow-2xl rounded-2xl w-full max-w-xl overflow-hidden transform transition-all duration-300 scale-95 opacity-0" id="modal-card">
-                
-                <!-- Modal Header -->
-                <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
-                    <div>
-                        <h3 class="text-lg font-bold text-slate-950">Add New Drug Profile</h3>
-                        <p class="text-xs text-slate-400 mt-0.5">Register a new product in the central database</p>
-                    </div>
-                    <button onclick="closeAddDrugModal()" class="text-slate-400 hover:text-slate-600 transition">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-                        </svg>
-                    </button>
-                </div>
-
-                <!-- Modal Form -->
-                <form id="add-drug-form" onsubmit="saveDrug(event)" class="p-6 space-y-4">
-                    <div class="grid grid-cols-2 gap-4">
-                        <!-- Barcode Field -->
-                        <div class="col-span-2">
-                            <label for="drug-barcode" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Barcode ID</label>
-                            <input type="text" id="drug-barcode" required placeholder="Enter unique product barcode (e.g. 8699500000000)"
-                                   class="block w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm font-medium placeholder-slate-400 focus:bg-white focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 focus:outline-none transition" />
-                        </div>
-
-                        <!-- Name Field -->
-                        <div class="col-span-2">
-                            <label for="drug-name" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Drug / Product Name</label>
-                            <input type="text" id="drug-name" required placeholder="Enter clinical or brand name (e.g. Aspirin 100 mg)"
-                                   class="block w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm font-medium placeholder-slate-400 focus:bg-white focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 focus:outline-none transition" />
-                        </div>
-
-                        <!-- Category Select -->
-                        <div>
-                            <label for="drug-category" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Category</label>
-                            <select id="drug-category" required
-                                    class="block w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 focus:outline-none transition">
-                                <option value="1">Analjezik & Antienflamatuar</option>
-                                <option value="2">Sistemik Antibakteriyeller</option>
-                                <option value="3">Psikoleptikler</option>
-                                <option value="4">Vitaminler ve Mineraller</option>
-                                <option value="5">Kardiyovasküler Sistem</option>
-                            </select>
-                        </div>
-
-                        <!-- Brand Select -->
-                        <div>
-                            <label for="drug-brand" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Brand Manufacturer</label>
-                            <select id="drug-brand" required
-                                    class="block w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 focus:outline-none transition">
-                                <option value="1">Pfizer</option>
-                                <option value="2">Abdi İbrahim</option>
-                                <option value="3">Sanofi</option>
-                                <option value="4">Novartis</option>
-                                <option value="5">Bilim İlaç</option>
-                            </select>
-                        </div>
-
-                        <!-- Prescription Type -->
-                        <div>
-                            <label for="drug-pres-type" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Prescription Type</label>
-                            <select id="drug-pres-type"
-                                    class="block w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 focus:outline-none transition">
-                                <option value="1">Normal Reçete</option>
-                                <option value="2">Beyaz Reçete</option>
-                                <option value="3">Yeşil Reçete</option>
-                                <option value="4">Kırmızı Reçete</option>
-                            </select>
-                        </div>
-
-                        <!-- Selling Price -->
-                        <div>
-                            <label for="drug-price" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Selling Price ($)</label>
-                            <input type="number" id="drug-price" step="0.01" min="0.00" required placeholder="0.00"
-                                   class="block w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm font-medium placeholder-slate-400 focus:bg-white focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 focus:outline-none transition" />
-                        </div>
-
-                        <!-- Min Stock Alert Threshold -->
-                        <div class="col-span-2">
-                            <label for="drug-min-stock" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Min Stock Alert Limit</label>
-                            <input type="number" id="drug-min-stock" min="0" required value="10"
-                                   class="block w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-indigo-600 focus:border-indigo-600 focus:outline-none transition" />
-                        </div>
-                    </div>
-
-                    <!-- Modal Actions -->
-                    <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
-                        <button type="button" onclick="closeAddDrugModal()" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold rounded-xl text-sm transition">
-                            Cancel
-                        </button>
-                        <button type="submit" id="btn-save-drug" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-sm transition shadow-md shadow-indigo-100 flex items-center gap-2">
-                            <span>Save Product</span>
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
         <!-- Inventory Client Scripts -->
         <script>
-            // Memory cache of drug list for local search queries
             let allDrugs = [];
 
-            // Load all active drugs from the API
             async function fetchDrugs() {
                 try {
                     const response = await fetch('/api/drugs');
@@ -192,7 +82,6 @@
                 }
             }
 
-            // Render drug list array to the DOM table
             function renderTable(drugsList) {
                 const tbody = document.getElementById('inventory-table-body');
                 const badge = document.getElementById('inventory-count-badge');
@@ -202,7 +91,7 @@
                 if (drugsList.length === 0) {
                     tbody.innerHTML = `
                         <tr>
-                            <td colspan="6" class="px-6 py-12 text-center text-slate-400 font-medium">
+                            <td colspan="7" class="px-6 py-12 text-center text-slate-400 font-medium">
                                 No active drugs found in database.
                             </td>
                         </tr>
@@ -211,37 +100,47 @@
                 }
 
                 let html = '';
-                drugsList.forEach(drug => {
-                    // Generate nice custom prescription type tags
+                drugsList.forEach((drug, index) => {
+                    const presName = drug.presTypeName || 'None';
                     let rxBadge = '';
-                    if (drug.presTypeName) {
-                        if (drug.presTypeName.includes('Kırmızı')) {
-                            rxBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-rose-50 text-rose-700 font-bold border border-rose-150 ml-2">Red Rx</span>`;
-                        } else if (drug.presTypeName.includes('Yeşil')) {
-                            rxBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-emerald-50 text-emerald-700 font-bold border border-emerald-150 ml-2">Green Rx</span>`;
-                        } else if (drug.presTypeName.includes('Beyaz')) {
-                            rxBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-blue-50 text-blue-700 font-bold border border-blue-150 ml-2">White Rx</span>`;
-                        }
+                    if (presName === 'Red' || presName.includes('Red')) {
+                        rxBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-rose-50 text-rose-700 font-bold border border-rose-200">Red Rx</span>`;
+                    } else if (presName === 'Green' || presName.includes('Green')) {
+                        rxBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-emerald-50 text-emerald-700 font-bold border border-emerald-200">Green Rx</span>`;
+                    } else if (presName === 'White' || presName.includes('White')) {
+                        rxBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-blue-50 text-blue-700 font-bold border border-blue-200">White Rx</span>`;
+                    } else if (presName === 'Normal' || presName.includes('Normal')) {
+                        rxBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-slate-50 text-slate-600 font-bold border border-slate-200">Normal</span>`;
                     }
 
+                    const totalStock = drug.totalStock !== null && drug.totalStock !== undefined ? drug.totalStock : 0;
+                    const stockColor = totalStock <= 0 ? 'text-rose-600 bg-rose-50' : (totalStock < (drug.minStockAlert || 10) ? 'text-amber-600 bg-amber-50' : 'text-emerald-600 bg-emerald-50');
+
+                    const rowId = `row-${index}`;
+                    const drawerId = `drawer-${index}`;
+
                     html += `
-                        <tr class="hover:bg-slate-50/50 transition">
+                        <tr id="${rowId}" class="hover:bg-slate-50/50 transition cursor-pointer" onclick="toggleDrawer('${drawerId}', '${rowId}')">
+                            <td class="px-4 py-4 text-center">
+                                <svg id="arrow-${drawerId}" class="w-4 h-4 text-slate-400 transition-transform duration-200" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            </td>
                             <td class="px-6 py-4">
                                 <span class="font-mono text-xs text-slate-500 bg-slate-100 border border-slate-200/80 px-2.5 py-1 rounded-lg select-all">
                                     ${drug.barcode}
                                 </span>
                             </td>
                             <td class="px-6 py-4">
-                                <div class="flex items-center">
-                                    <span class="font-bold text-slate-900">${drug.name}</span>
-                                    ${rxBadge}
-                                </div>
+                                <span class="font-bold text-slate-900">${drug.name}</span>
                             </td>
                             <td class="px-6 py-4 text-slate-500 font-medium">${drug.categoryName || 'Unassigned'}</td>
-                            <td class="px-6 py-4 text-slate-500 font-medium">${drug.brandName || 'Generic'}</td>
-                            <td class="px-6 py-4 text-right font-extrabold text-slate-900">$${parseFloat(drug.currentSellingPrice || 0.00).toFixed(2)}</td>
+                            <td class="px-6 py-4">${rxBadge}</td>
                             <td class="px-6 py-4 text-center">
-                                <div class="flex items-center justify-center gap-2">
+                                <span class="px-2.5 py-1 rounded-full font-bold text-xs ${stockColor}">${totalStock} units</span>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <div class="flex items-center justify-center gap-2" onclick="event.stopPropagation();">
                                     <button onclick="editPlaceholder('${drug.barcode}')" class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition" title="Edit Drug">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
@@ -255,12 +154,83 @@
                                 </div>
                             </td>
                         </tr>
+                        <tr id="${drawerId}" class="hidden">
+                            <td colspan="7" class="p-0">
+                                <div class="bg-slate-50/80 border-t border-slate-100 px-8 py-5">
+                                    <div class="flex items-center gap-2 mb-3">
+                                        <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                                        </svg>
+                                        <h5 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Active Purchase Batches</h5>
+                                    </div>
+                                    ${renderBatchTable(drug.batches)}
+                                </div>
+                            </td>
+                        </tr>
                     `;
                 });
                 tbody.innerHTML = html;
             }
 
-            // Client side reactive search filtering
+            function renderBatchTable(batches) {
+                if (!batches || batches.length === 0) {
+                    return '<p class="text-xs text-slate-400 italic py-2">No active purchase batches for this drug.</p>';
+                }
+
+                let html = `
+                    <table class="w-full text-left border-collapse bg-white rounded-xl overflow-hidden border border-slate-200/80 shadow-sm">
+                        <thead>
+                            <tr class="bg-slate-50 text-[10px] font-bold tracking-wider text-slate-400 uppercase border-b border-slate-100">
+                                <th class="px-4 py-2.5">Batch ID</th>
+                                <th class="px-4 py-2.5">Purchase Price</th>
+                                <th class="px-4 py-2.5">Expiration Date</th>
+                                <th class="px-4 py-2.5 text-center">Remaining Qty</th>
+                                <th class="px-4 py-2.5 text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-xs divide-y divide-slate-100 text-slate-600">
+                `;
+
+                batches.forEach(batch => {
+                    let statusBadge = '';
+                    if (batch.status === 'EXPIRED') {
+                        statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] bg-rose-50 text-rose-600 font-bold">EXPIRED</span>';
+                    } else if (batch.status === 'CRITICAL') {
+                        statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] bg-amber-50 text-amber-600 font-bold">CRITICAL</span>';
+                    } else if (batch.status === 'WARNING') {
+                        statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] bg-yellow-50 text-yellow-600 font-bold">WARNING</span>';
+                    } else {
+                        statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] bg-emerald-50 text-emerald-600 font-bold">OK</span>';
+                    }
+
+                    html += `
+                        <tr class="hover:bg-slate-50/50 transition">
+                            <td class="px-4 py-3 font-mono font-bold text-slate-700">#${batch.id}</td>
+                            <td class="px-4 py-3 font-semibold text-slate-700">$${parseFloat(batch.purchasePrice || 0).toFixed(2)}</td>
+                            <td class="px-4 py-3 font-mono text-slate-500">${batch.expirationDate}</td>
+                            <td class="px-4 py-3 text-center font-bold text-slate-800">${batch.remainingQuantity}</td>
+                            <td class="px-4 py-3 text-center">${statusBadge}</td>
+                        </tr>
+                    `;
+                });
+
+                html += '</tbody></table>';
+                return html;
+            }
+
+            function toggleDrawer(drawerId, rowId) {
+                const drawer = document.getElementById(drawerId);
+                const arrow = document.getElementById('arrow-' + drawerId);
+
+                if (drawer.classList.contains('hidden')) {
+                    drawer.classList.remove('hidden');
+                    arrow.style.transform = 'rotate(90deg)';
+                } else {
+                    drawer.classList.add('hidden');
+                    arrow.style.transform = 'rotate(0deg)';
+                }
+            }
+
             function filterTable() {
                 const query = document.getElementById('search-input').value.toLowerCase().trim();
                 if (query === '') {
@@ -274,99 +244,6 @@
                 renderTable(filtered);
             }
 
-            // Modal dialog open control
-            function openAddDrugModal() {
-                const modal = document.getElementById('add-drug-modal');
-                const card = document.getElementById('modal-card');
-                
-                modal.classList.remove('hidden');
-                setTimeout(() => {
-                    card.classList.remove('scale-95', 'opacity-0');
-                    card.classList.add('scale-100', 'opacity-100');
-                }, 10);
-            }
-
-            // Modal dialog close control
-            function closeAddDrugModal() {
-                const modal = document.getElementById('add-drug-modal');
-                const card = document.getElementById('modal-card');
-                
-                card.classList.add('scale-95', 'opacity-0');
-                card.classList.remove('scale-100', 'opacity-100');
-                setTimeout(() => {
-                    modal.classList.add('hidden');
-                    document.getElementById('add-drug-form').reset();
-                }, 300);
-            }
-
-            // AJAX call to save new drug profile
-            async function saveDrug(event) {
-                event.preventDefault();
-                const btn = document.getElementById('btn-save-drug');
-                
-                const barcode = document.getElementById('drug-barcode').value.trim();
-                const name = document.getElementById('drug-name').value.trim();
-                const categoryId = parseInt(document.getElementById('drug-category').value);
-                const brandId = parseInt(document.getElementById('drug-brand').value);
-                const presTypeId = parseInt(document.getElementById('drug-pres-type').value);
-                const price = parseFloat(document.getElementById('drug-price').value);
-                const minStock = parseInt(document.getElementById('drug-min-stock').value);
-
-                // Validation guards
-                if (barcode === '' || name === '' || isNaN(price)) {
-                    showToast('Please fill in all required product fields', 'error');
-                    return;
-                }
-
-                btn.disabled = true;
-                const originalText = btn.innerHTML;
-                btn.innerHTML = `
-                    <svg class="animate-spin w-4 h-4 text-white" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    <span>Saving...</span>
-                `;
-
-                // Build request DTO body
-                const requestData = {
-                    barcode: barcode,
-                    name: name,
-                    categoryId: categoryId,
-                    brandId: brandId,
-                    presTypeId: presTypeId,
-                    currentSellingPrice: price,
-                    minStockAlert: minStock
-                };
-
-                try {
-                    const response = await fetch('/api/drugs', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(requestData)
-                    });
-
-                    if (response.ok) {
-                        showToast(`Successfully registered ${name}`, 'success');
-                        closeAddDrugModal();
-                        fetchDrugs(); // Refresh table records
-                    } else {
-                        const err = await response.json();
-                        const msg = err.message || 'Error occurred while registering product';
-                        showToast(msg, 'error');
-                    }
-                } catch (error) {
-                    console.error('Error saving drug:', error);
-                    showToast('Connection error to product database', 'error');
-                } finally {
-                    btn.disabled = false;
-                    btn.innerHTML = originalText;
-                }
-            }
-
-            // AJAX Soft delete confirmation and action
             function confirmDelete(barcode, name) {
                 if (confirm(`Are you absolutely sure you want to delete ${name}?\nThis is a soft-delete action: the product will be archived but remains in past sale records.`)) {
                     executeDelete(barcode, name);
@@ -381,7 +258,7 @@
 
                     if (response.ok) {
                         showToast(`Successfully archived ${name}`, 'success');
-                        fetchDrugs(); // Refresh database list
+                        fetchDrugs();
                     } else {
                         showToast(`Failed to archive product ${name}`, 'error');
                     }
@@ -391,12 +268,10 @@
                 }
             }
 
-            // Edit product placeholder notification
             function editPlaceholder(barcode) {
                 showToast('Interactive profile editing is fully configured in the central data console', 'success');
             }
 
-            // Initial load
             window.addEventListener('DOMContentLoaded', () => {
                 fetchDrugs();
             });

@@ -2,6 +2,7 @@ package com.pharmacy.dto.response;
 
 import com.pharmacy.entity.Drug;
 import java.math.BigDecimal;
+import java.util.List;
 import lombok.*;
 
 @Data
@@ -21,6 +22,8 @@ public class DrugResponse {
     private BigDecimal currentSellingPrice;
     private Integer minStockAlert;
     private Boolean isActive;
+    private Integer totalStock;
+    private List<PurchaseBatchResponse> batches;
 
     public static DrugResponse fromEntity(Drug drug) {
         if (drug == null) {
