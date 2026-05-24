@@ -1,0 +1,333 @@
+<!-- src/main/resources/templates/purchase/index.html -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(~{::main})}">
+<body>
+    <main class="space-y-8">
+        
+        <!-- Page Title -->
+        <div class="flex items-center justify-between border-b border-slate-100 pb-5">
+            <div>
+                <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Stock Purchase & Registration</h2>
+                <p class="text-sm text-slate-400 font-medium">Add batches to existing inventory or register completely new pharmaceutical products</p>
+            </div>
+        </div>
+
+        <!-- Mode Tabs -->
+        <div class="flex gap-2 p-1 bg-slate-100 rounded-2xl w-fit">
+            <button onclick="switchTab('existing-mode')" id="tab-existing" 
+                    class="px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 bg-white text-indigo-600 shadow-sm">
+                Add Stock to Existing Drug
+            </button>
+            <button onclick="switchTab('new-mode')" id="tab-new" 
+                    class="px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 text-slate-500 hover:text-slate-900">
+                Register New Drug
+            </button>
+        </div>
+
+        <!-- MODE 1: Existing Drug Form -->
+        <div id="existing-mode" class="block">
+            <div class="max-w-2xl bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-100/40 p-8">
+                <form id="existing-drug-form" class="space-y-6">
+                    <div>
+                        <label for="existing-drug-select" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Select Drug</label>
+                        <select id="existing-drug-select" required
+                                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-all duration-200">
+                            <option value="">Choose a drug...</option>
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="existing-qty" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Purchase Quantity</label>
+                            <input type="number" id="existing-qty" required min="1"
+                                   class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-all duration-200"
+                                   placeholder="e.g. 50">
+                        </div>
+                        <div>
+                            <label for="existing-price" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Unit Purchase Cost ($)</label>
+                            <input type="number" id="existing-price" required min="0.01" step="0.01"
+                                   class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-all duration-200"
+                                   placeholder="e.g. 25.50">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="existing-expiry" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Expiration Date</label>
+                        <input type="date" id="existing-expiry" required
+                               class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-all duration-200">
+                    </div>
+
+                    <button type="submit" id="existing-submit-btn"
+                            class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-indigo-100 hover:shadow-xl hover:shadow-indigo-200/50 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2">
+                        Add Stock Batch
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- MODE 2: Register New Drug Form -->
+        <div id="new-mode" class="hidden">
+            <div class="max-w-4xl bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-100/40 p-8">
+                <form id="new-drug-form" class="space-y-8">
+                    
+                    <!-- Section 1: Drug Profile -->
+                    <div class="space-y-6">
+                        <h3 class="text-sm font-bold text-slate-800 border-b border-slate-100 pb-2 uppercase tracking-wide">1. Drug General Specifications</h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="new-barcode" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Barcode / UPC</label>
+                                <input type="text" id="new-barcode" required
+                                       class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-all duration-200"
+                                       placeholder="Scan or type barcode...">
+                            </div>
+                            <div>
+                                <label for="new-name" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Drug Name</label>
+                                <input type="text" id="new-name" required
+                                       class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-all duration-200"
+                                       placeholder="e.g. Parol 500 mg Tablet">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div>
+                                <label for="new-category" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Category</label>
+                                <select id="new-category" required
+                                        class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-all duration-200">
+                                    <option value="">Select Category...</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="new-brand" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Brand / Manufacturer</label>
+                                <select id="new-brand" required
+                                        class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-all duration-200">
+                                    <option value="">Select Brand...</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="new-pres-type" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Prescription Class</label>
+                                <select id="new-pres-type" required
+                                        class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-all duration-200">
+                                    <option value="1">Normal</option>
+                                    <option value="2">White</option>
+                                    <option value="3">Green</option>
+                                    <option value="4">Red</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="new-selling-price" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Patient Selling Price ($)</label>
+                                <input type="number" id="new-selling-price" required min="0.01" step="0.01"
+                                       class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-all duration-200"
+                                       placeholder="e.g. 45.50">
+                            </div>
+                            <div>
+                                <label for="new-min-stock" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Minimum Stock Alert Threshold</label>
+                                <input type="number" id="new-min-stock" required min="1"
+                                       class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-all duration-200"
+                                       placeholder="e.g. 20">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Initial Purchase Batch -->
+                    <div class="space-y-6">
+                        <h3 class="text-sm font-bold text-slate-800 border-b border-slate-100 pb-2 uppercase tracking-wide">2. Initial Stock Batch Details</h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div>
+                                <label for="new-qty" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Initial Quantity</label>
+                                <input type="number" id="new-qty" required min="1"
+                                       class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-all duration-200"
+                                       placeholder="e.g. 100">
+                            </div>
+                            <div>
+                                <label for="new-purchase-price" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Unit Purchase Cost ($)</label>
+                                <input type="number" id="new-purchase-price" required min="0.01" step="0.01"
+                                       class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-all duration-200"
+                                       placeholder="e.g. 30.00">
+                            </div>
+                            <div>
+                                <label for="new-expiry" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Expiration Date</label>
+                                <input type="date" id="new-expiry" required
+                                       class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-all duration-200">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="new-submit-btn"
+                            class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-indigo-100 hover:shadow-xl hover:shadow-indigo-200/50 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2">
+                        Complete Registration & Add Stock
+                    </button>
+                </form>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Purchase Logic Script -->
+    <script>
+        // Tab switching logic
+        function switchTab(mode) {
+            if (mode === 'existing-mode') {
+                document.getElementById('existing-mode').classList.remove('hidden');
+                document.getElementById('new-mode').classList.add('hidden');
+                document.getElementById('tab-existing').className = "px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 bg-white text-indigo-600 shadow-sm";
+                document.getElementById('tab-new').className = "px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 text-slate-500 hover:text-slate-900";
+            } else {
+                document.getElementById('existing-mode').classList.add('hidden');
+                document.getElementById('new-mode').classList.remove('hidden');
+                document.getElementById('tab-existing').className = "px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 text-slate-500 hover:text-slate-900";
+                document.getElementById('tab-new').className = "px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 bg-white text-indigo-600 shadow-sm";
+            }
+        }
+
+        // Fetch utilities on load
+        async function loadSelectors() {
+            try {
+                // Fetch Drugs
+                const drugRes = await fetch('/api/drugs');
+                const drugs = await drugRes.json();
+                const drugSelect = document.getElementById('existing-drug-select');
+                drugSelect.innerHTML = '<option value="">Choose a drug...</option>';
+                drugs.forEach(d => {
+                    drugSelect.innerHTML += `<option value="${d.barcode}">${d.name} (${d.barcode})</option>`;
+                });
+
+                // Fetch Categories
+                const catRes = await fetch('/api/categories');
+                const categories = await catRes.json();
+                const catSelect = document.getElementById('new-category');
+                catSelect.innerHTML = '<option value="">Select Category...</option>';
+                categories.forEach(c => {
+                    catSelect.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+                });
+
+                // Fetch Brands
+                const brandRes = await fetch('/api/brands');
+                const brands = await brandRes.json();
+                const brandSelect = document.getElementById('new-brand');
+                brandSelect.innerHTML = '<option value="">Select Brand...</option>';
+                brands.forEach(b => {
+                    brandSelect.innerHTML += `<option value="${b.id}">${b.name}</option>`;
+                });
+            } catch (err) {
+                console.error("Failed to load select parameters", err);
+                window.showToast("Failed to initialize dropdown selectors.", "error");
+            }
+        }
+
+        // Form 1: Existing Stock Purchase
+        document.getElementById('existing-drug-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const barcode = document.getElementById('existing-drug-select').value;
+            const qty = parseInt(document.getElementById('existing-qty').value);
+            const price = parseFloat(document.getElementById('existing-price').value);
+            const expiry = document.getElementById('existing-expiry').value;
+            const btn = document.getElementById('existing-submit-btn');
+
+            btn.disabled = true;
+            try {
+                const res = await fetch('/api/purchases', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        drugBarcode: barcode,
+                        quantity: qty,
+                        purchasePrice: price,
+                        expirationDate: expiry
+                    })
+                });
+
+                if (res.ok) {
+                    window.showToast("Purchase batch added successfully!");
+                    document.getElementById('existing-drug-form').reset();
+                    loadSelectors();
+                } else {
+                    const txt = await res.text();
+                    window.showToast(txt || "Failed to register purchase.", "error");
+                }
+            } catch (err) {
+                window.showToast("Server connection error.", "error");
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        // Form 2: Register New Drug and Initial Purchase Batch
+        document.getElementById('new-drug-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('new-submit-btn');
+
+            const barcode = document.getElementById('new-barcode').value;
+            const name = document.getElementById('new-name').value;
+            const categoryId = parseInt(document.getElementById('new-category').value);
+            const brandId = parseInt(document.getElementById('new-brand').value);
+            const presTypeId = parseInt(document.getElementById('new-pres-type').value);
+            const sellingPrice = parseFloat(document.getElementById('new-selling-price').value);
+            const minStock = parseInt(document.getElementById('new-min-stock').value);
+
+            const qty = parseInt(document.getElementById('new-qty').value);
+            const purchasePrice = parseFloat(document.getElementById('new-purchase-price').value);
+            const expiry = document.getElementById('new-expiry').value;
+
+            btn.disabled = true;
+            try {
+                // Step A: Save new Drug
+                const drugRes = await fetch('/api/drugs', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        barcode: barcode,
+                        name: name,
+                        categoryId: categoryId,
+                        brandId: brandId,
+                        presTypeId: presTypeId,
+                        currentSellingPrice: sellingPrice,
+                        minStockAlert: minStock
+                    })
+                });
+
+                if (!drugRes.ok) {
+                    const txt = await drugRes.text();
+                    window.showToast(txt || "Failed to save new drug specifications.", "error");
+                    btn.disabled = false;
+                    return;
+                }
+
+                // Step B: Save initial Stock batch
+                const purchaseRes = await fetch('/api/purchases', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        drugBarcode: barcode,
+                        quantity: qty,
+                        purchasePrice: purchasePrice,
+                        expirationDate: expiry
+                    })
+                });
+
+                if (purchaseRes.ok) {
+                    window.showToast("Drug and its initial stock registered successfully!");
+                    document.getElementById('new-drug-form').reset();
+                    loadSelectors();
+                    switchTab('existing-mode');
+                } else {
+                    const txt = await purchaseRes.text();
+                    window.showToast(txt || "Failed to save initial stock batch.", "error");
+                }
+            } catch (err) {
+                window.showToast("Server connection error.", "error");
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        // Initialize selectors on load
+        window.addEventListener('DOMContentLoaded', loadSelectors);
+    </script>
+</body>
+</html>

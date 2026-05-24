@@ -25,6 +25,10 @@ public class Sale {
     @JoinColumn(name = "customer_id")
     private Customer customer;
 
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
+
     @NotNull
     @Column(precision = 10, scale = 2)
     private BigDecimal totalAmount;

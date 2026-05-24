@@ -79,4 +79,19 @@ public class DrugController {
         drugService.softDelete(barcode);
         return ResponseEntity.noContent().build();
     }
+
+    @PutMapping("/{barcode}")
+    public ResponseEntity<DrugResponse> update(
+            @PathVariable String barcode,
+            @RequestBody java.util.Map<String, Object> payload) {
+        Drug drug = drugService.findByBarcode(barcode);
+        if (payload.containsKey("currentSellingPrice")) {
+            drug.setCurrentSellingPrice(new java.math.BigDecimal(payload.get("currentSellingPrice").toString()));
+        }
+        if (payload.containsKey("minStockAlert")) {
+            drug.setMinStockAlert(Integer.parseInt(payload.get("minStockAlert").toString()));
+        }
+        Drug updated = drugService.save(drug);
+        return ResponseEntity.ok(DrugResponse.fromEntity(updated));
+    }
 }

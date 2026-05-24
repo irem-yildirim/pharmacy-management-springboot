@@ -1,5 +1,6 @@
 package com.pharmacy.controller;
 
+import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
@@ -24,5 +25,38 @@ public class UIController {
     @GetMapping("/inventory")
     public String inventory() {
         return "inventory/index";
+    }
+
+    @GetMapping("/purchase")
+    public String purchase() {
+        return "purchase/index";
+    }
+
+    @GetMapping("/customer")
+    public String customer() {
+        return "customer/index";
+    }
+
+    @GetMapping("/settings")
+    public String settings() {
+        return "settings/index";
+    }
+
+    @GetMapping("/account")
+    public String account() {
+        return "account/index";
+    }
+
+    @GetMapping("/login")
+    public String login() {
+        return "login/index";
+    }
+
+    @GetMapping("/logout")
+    public String logout(HttpSession session) {
+        if (session != null) {
+            session.invalidate();
+        }
+        return "redirect:/login";
     }
 }

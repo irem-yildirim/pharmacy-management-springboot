@@ -16,4 +16,6 @@ public class SaleCreateRequest {
     private List<SaleItemRequest> items;
 
     private boolean prescriptionLogged;
+
+    private Long customerId;
 }

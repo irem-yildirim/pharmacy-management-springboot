@@ -11,6 +11,9 @@ import com.pharmacy.exception.PrescriptionRequiredException;
 import com.pharmacy.repository.DrugRepository;
 import com.pharmacy.repository.PurchaseRepository;
 import com.pharmacy.repository.SaleRepository;
+import com.pharmacy.repository.CustomerRepository;
+import com.pharmacy.entity.Customer;
+import com.pharmacy.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,14 +30,16 @@ public class SaleService {
     private final SaleRepository saleRepository;
     private final DrugRepository drugRepository;
     private final PurchaseRepository purchaseRepository;
+    private final CustomerRepository customerRepository;
 
     @Transactional
-    public Sale createSale(List<SaleItemRequest> requests, boolean prescriptionLogged) {
+    public Sale createSale(List<SaleItemRequest> requests, boolean prescriptionLogged, Long customerId, User user) {
         Sale sale = Sale.builder()
                 .saleDate(LocalDateTime.now())
                 .isPrescriptionLogged(prescriptionLogged)
                 .totalAmount(BigDecimal.ZERO)
                 .items(new ArrayList<>())
+                .user(user)
                 .build();
 
         BigDecimal totalAmount = BigDecimal.ZERO;
@@ -63,6 +68,16 @@ public class SaleService {
         }
 
         sale.setTotalAmount(totalAmount);
+
+        if (customerId != null) {
+            Customer customer = customerRepository.findById(customerId).orElse(null);
+            if (customer != null) {
+                sale.setCustomer(customer);
+                customer.setBalance(customer.getBalance().add(totalAmount));
+                customerRepository.save(customer);
+            }
+        }
+
         return saleRepository.save(sale);
     }
 

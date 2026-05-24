@@ -1,0 +1,166 @@
+<!-- src/main/resources/templates/account/index.html -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(~{::main})}">
+<body>
+    <main class="space-y-8">
+        
+        <!-- Page Title -->
+        <div class="flex items-center justify-between border-b border-slate-100 pb-5">
+            <div>
+                <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Personal Workspace</h2>
+                <p class="text-sm text-slate-400 font-medium">Overview of your account profile, credentials, and real-time sales achievements</p>
+            </div>
+        </div>
+
+        <!-- Profile & Performance Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <!-- Left Column: User Profile Card -->
+            <div class="lg:col-span-4 space-y-6">
+                <div class="bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-100/40 p-8 text-center space-y-4">
+                    <div class="w-20 h-20 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-2xl mx-auto shadow-sm">
+                        <span th:text="${user != null ? #strings.substring(user.name, 0, 2).toUpperCase() : 'US'}">US</span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900" th:text="${user != null ? user.name : 'Active Staff'}">John Doe</h3>
+                        <span class="text-xs text-slate-400 font-medium" th:text="${user != null ? '@' + user.username : '@john_doe'}">@john_doe</span>
+                    </div>
+                    <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-50 text-indigo-700 text-[10px] font-bold rounded-lg border border-indigo-150 uppercase tracking-wider mx-auto"
+                          th:text="${user != null ? user.role.name() : 'Staff'}">
+                        PHARMACIST
+                    </div>
+                    
+                    <div class="border-t border-slate-100 pt-4 mt-4 text-left space-y-2">
+                        <div class="flex justify-between text-xs font-semibold text-slate-400">
+                            <span>Status:</span>
+                            <span class="text-emerald-600 font-bold">Active Account</span>
+                        </div>
+                        <div class="flex justify-between text-xs font-semibold text-slate-400">
+                            <span>Permissions:</span>
+                            <span class="text-slate-700 font-bold" th:text="${user != null and user.role.name() == 'CASHIER' ? 'Operational' : 'Operational & Analytical'}">Standard</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Performance Summary Dashboard -->
+            <div class="lg:col-span-8 space-y-8">
+                
+                <!-- Performance KPI Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div class="bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-100/40 p-6 flex items-center gap-4">
+                        <div class="p-3 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-100 shadow-sm shrink-0">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Sales Revenue</span>
+                            <h4 id="perf-revenue" class="text-2xl font-bold text-slate-900 mt-0.5">$0.00</h4>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-100/40 p-6 flex items-center gap-4">
+                        <div class="p-3 rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-100 shadow-sm shrink-0">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Transactions Completed</span>
+                            <h4 id="perf-count" class="text-2xl font-bold text-slate-900 mt-0.5">0</h4>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Transactions Table -->
+                <div class="bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-100/40 overflow-hidden flex flex-col min-h-[300px]">
+                    <div class="p-6 border-b border-slate-100">
+                        <h3 class="font-bold text-slate-800">Your Recent Transactions</h3>
+                        <p class="text-xs text-slate-400 font-medium">Real-time log of sales processed under your active credentials</p>
+                    </div>
+                    <div class="overflow-x-auto flex-1">
+                        <table class="w-full text-left border-collapse table-fixed">
+                            <thead>
+                                <tr class="bg-slate-50/50 border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                                    <th class="w-20 py-4 px-6">ID</th>
+                                    <th class="py-4 px-6">Date / Time</th>
+                                    <th class="w-1/3 py-4 px-6">Customer / Target</th>
+                                    <th class="w-32 py-4 px-6 text-right">Sale Total ($)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="perf-table-body" class="divide-y divide-slate-100 text-xs text-slate-600">
+                                <tr>
+                                    <td colspan="4" class="py-12 text-center text-slate-400 font-medium">Loading sales history...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Performance Stats Script -->
+    <script>
+        async function fetchPerformance() {
+            const revCard = document.getElementById('perf-revenue');
+            const cntCard = document.getElementById('perf-count');
+            const tbody = document.getElementById('perf-table-body');
+
+            try {
+                const response = await fetch('/api/users/performance');
+                if (!response.ok) {
+                    tbody.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-rose-500">Could not fetch statistics.</td></tr>`;
+                    return;
+                }
+
+                const data = await response.json();
+                
+                revCard.textContent = `$${parseFloat(data.totalRevenue).toFixed(2)}`;
+                cntCard.textContent = data.salesCount;
+
+                if (data.sales.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="4" class="py-16 text-center text-slate-400 font-medium">
+                                No sales registered to your account yet. Complete a POS sale to see history.
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                tbody.innerHTML = '';
+                data.sales.forEach(sale => {
+                    const dateObj = new Date(sale.saleDate);
+                    const formattedDate = dateObj.toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-slate-50/50 transition-colors">
+                            <td class="py-4 px-6 font-semibold text-slate-400">#${sale.id}</td>
+                            <td class="py-4 px-6 font-semibold text-slate-700">${formattedDate}</td>
+                            <td class="py-4 px-6 font-bold text-slate-800">${sale.customerName}</td>
+                            <td class="py-4 px-6 text-right font-bold text-slate-900">$${parseFloat(sale.totalAmount).toFixed(2)}</td>
+                        </tr>
+                    `;
+                });
+
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-rose-500 font-semibold">Server failure.</td></tr>`;
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', fetchPerformance);
+    </script>
+</body>
+</html>

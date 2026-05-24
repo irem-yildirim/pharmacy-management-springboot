@@ -113,6 +113,23 @@
                 <div class="bg-white border border-slate-200/80 shadow-sm rounded-2xl p-6 space-y-6 sticky top-6">
                     <h4 class="font-bold text-slate-950 pb-4 border-b border-slate-100">Checkout Summary</h4>
                     
+                    <!-- Customer Selector Panel -->
+                    <div class="space-y-2">
+                        <label for="customer-select" class="block text-xs font-bold text-slate-500 uppercase tracking-wider">Select Customer</label>
+                        <div class="flex items-center gap-2">
+                            <select id="customer-select" 
+                                    class="flex-1 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:border-indigo-500 focus:bg-white transition-all duration-200">
+                                <option value="">Walk-in Customer (Cash)</option>
+                            </select>
+                            <button type="button" onclick="toggleCustomerModal(true)" 
+                                    class="p-2 bg-indigo-50 border border-indigo-100 hover:bg-indigo-100 text-indigo-600 rounded-xl transition shadow-sm" title="Quick Add Customer">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
                     <!-- Cost Breakdowns -->
                     <div class="space-y-3.5">
                         <div class="flex items-center justify-between text-sm text-slate-500">
@@ -134,11 +151,10 @@
                     <div class="p-4 bg-slate-50 rounded-2xl space-y-3 border border-slate-150">
                         <div class="flex items-center justify-between">
                             <div class="pr-2">
-                                <h5 class="text-sm font-bold text-slate-900 leading-tight">Prescription Logged</h5>
-                                <p class="text-[10px] text-slate-400 mt-0.5 leading-normal">Required for White, Green, and Red prescription drugs.</p>
+                                <h5 class="text-xs font-bold text-slate-900 leading-tight">Prescription Logged</h5>
+                                <p class="text-[9px] text-slate-400 mt-0.5 leading-normal">Required for White, Green, and Red prescription drugs.</p>
                             </div>
                             
-                            <!-- Premium Custom iOS-Style Toggle -->
                             <label class="relative inline-flex items-center cursor-pointer shrink-0">
                                 <input type="checkbox" id="prescription-logged" class="sr-only peer" />
                                 <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
@@ -158,6 +174,33 @@
             
         </div>
 
+        <!-- Quick Add Customer Modal -->
+        <div id="quick-customer-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 backdrop-blur-sm hidden transition-all duration-300">
+            <div class="bg-white w-full max-w-sm rounded-3xl border border-slate-100 shadow-2xl p-6 space-y-4 transform scale-95 transition-all duration-300" id="q-customer-card">
+                <div class="flex items-center justify-between border-b border-slate-50 pb-3">
+                    <h3 class="font-bold text-slate-900 text-base">Quick Add Customer</h3>
+                    <button type="button" onclick="toggleCustomerModal(false)" class="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-50 transition-colors">
+                        <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                <form id="q-customer-form" class="space-y-3">
+                    <div>
+                        <label for="q-customer-name" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Full Name</label>
+                        <input type="text" id="q-customer-name" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-none focus:border-indigo-500 focus:bg-white transition-all duration-200" placeholder="e.g. John Doe">
+                    </div>
+                    <div>
+                        <label for="q-customer-phone" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Phone Number</label>
+                        <input type="tel" id="q-customer-phone" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-none focus:border-indigo-500 focus:bg-white transition-all duration-200" placeholder="e.g. 5551234567">
+                    </div>
+                    <button type="submit" id="q-customer-btn" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-lg transition-all duration-200">
+                        Create & Select
+                    </button>
+                </form>
+            </div>
+        </div>
+
         <!-- POS Scripts and Controller Interaction Logic -->
         <script>
             // Shopping Cart In-Memory Store
@@ -168,6 +211,70 @@
             // Focus search bar on DOM load
             window.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('barcode-input').focus();
+                loadCustomers();
+            });
+
+            // Toggler for Quick Add Customer modal
+            function toggleCustomerModal(show) {
+                const modal = document.getElementById('quick-customer-modal');
+                const card = document.getElementById('q-customer-card');
+                if (show) {
+                    modal.classList.remove('hidden');
+                    setTimeout(() => {
+                        card.classList.remove('scale-95');
+                    }, 10);
+                } else {
+                    card.classList.add('scale-95');
+                    setTimeout(() => {
+                        modal.classList.add('hidden');
+                    }, 150);
+                }
+            }
+
+            // Load all customers in POS dropdown
+            async function loadCustomers(selectedId = null) {
+                const select = document.getElementById('customer-select');
+                try {
+                    const response = await fetch('/api/customers');
+                    const customers = await response.json();
+                    select.innerHTML = '<option value="">Walk-in Customer (Cash)</option>';
+                    customers.forEach(c => {
+                        select.innerHTML += `<option value="${c.id}" ${selectedId && selectedId === c.id ? 'selected' : ''}>${c.name} (${c.phone})</option>`;
+                    });
+                } catch (err) {
+                    console.error("Failed to load customer list for select.", err);
+                }
+            }
+
+            // Handle Quick Add Customer Submission
+            document.getElementById('q-customer-form').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const btn = document.getElementById('q-customer-btn');
+                const name = document.getElementById('q-customer-name').value;
+                const phone = document.getElementById('q-customer-phone').value;
+
+                btn.disabled = true;
+                try {
+                    const res = await fetch('/api/customers', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: name, phone: phone, balance: 0.00 })
+                    });
+                    if (res.ok) {
+                        const newCustomer = await res.json();
+                        window.showToast("Customer created successfully!");
+                        document.getElementById('q-customer-form').reset();
+                        toggleCustomerModal(false);
+                        // Reload customer dropdown and auto-select this new customer
+                        await loadCustomers(newCustomer.id);
+                    } else {
+                        window.showToast("Failed to quick add customer.", "error");
+                    }
+                } catch (err) {
+                    window.showToast("Network error.", "error");
+                } finally {
+                    btn.disabled = false;
+                }
             });
 
             // Determine if input is a barcode (pure numeric) or a name search
@@ -329,6 +436,7 @@
                 if (cart.length === 0) return;
                 cart = [];
                 document.getElementById('prescription-logged').checked = false;
+                document.getElementById('customer-select').value = '';
                 showToast('Cart cleared', 'success');
                 renderCart();
             }
@@ -423,6 +531,19 @@
                     return;
                 }
 
+                const customerId = document.getElementById('customer-select').value;
+
+                // CHECKOUT BLOCK: If any drug in cart is Red or Green, Complete Sale is BLOCKED until a customer is selected.
+                const hasControlledDrug = cart.some(item => {
+                    const type = item.prescriptionType || '';
+                    return type === 'Red' || type === 'Green' || type.includes('Red') || type.includes('Green');
+                });
+
+                if (hasControlledDrug && !customerId) {
+                    showToast('Customer selection is REQUIRED for controlled Red or Green prescription drugs!', 'error');
+                    return;
+                }
+
                 const btn = document.getElementById('btn-complete-sale');
                 const isPrescription = document.getElementById('prescription-logged').checked;
                 
@@ -441,7 +562,8 @@
                         barcode: item.barcode,
                         quantity: parseInt(item.quantity)
                     })),
-                    prescriptionLogged: isPrescription
+                    prescriptionLogged: isPrescription,
+                    customerId: customerId ? parseInt(customerId) : null
                 };
 
                 try {
@@ -459,6 +581,7 @@
                         
                         cart = [];
                         document.getElementById('prescription-logged').checked = false;
+                        document.getElementById('customer-select').value = '';
                         renderCart();
                         
                         document.getElementById('barcode-input').focus();

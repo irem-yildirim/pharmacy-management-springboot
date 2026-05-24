@@ -1,0 +1,186 @@
+<!-- src/main/resources/templates/customer/index.html -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(~{::main})}">
+<body>
+    <main class="space-y-8">
+        
+        <!-- Page Title & Actions -->
+        <div class="flex items-center justify-between border-b border-slate-100 pb-5">
+            <div>
+                <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Customer Registry</h2>
+                <p class="text-sm text-slate-400 font-medium">Manage patient accounts, outstanding debts, and veresiye credit histories</p>
+            </div>
+            
+            <button onclick="toggleModal(true)"
+                    class="flex items-center gap-2 px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-indigo-100 hover:shadow-xl hover:shadow-indigo-200/50 active:scale-[0.98] transition-all duration-200">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+                </svg>
+                <span>Add Customer</span>
+            </button>
+        </div>
+
+        <!-- Customer List Table -->
+        <div class="bg-white border border-slate-100 rounded-3xl shadow-xl shadow-slate-100/40 overflow-hidden flex flex-col min-h-[400px]">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse table-fixed">
+                    <thead>
+                        <tr class="bg-slate-50/50 border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                            <th class="w-20 py-4 px-6">ID</th>
+                            <th class="w-1/3 py-4 px-6">Customer Name</th>
+                            <th class="w-1/4 py-4 px-6">Phone Number</th>
+                            <th class="w-1/4 py-4 px-6 text-right">Outstanding Debt ($)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customer-table-body" class="divide-y divide-slate-100 text-sm text-slate-600">
+                        <tr>
+                            <td colspan="4" class="py-12 text-center text-slate-400 font-medium">Loading customers...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Add Customer Modal -->
+        <div id="addCustomerModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 backdrop-blur-sm hidden transition-all duration-300">
+            <div class="bg-white w-full max-w-md rounded-3xl border border-slate-100 shadow-2xl p-8 space-y-6 transform scale-95 transition-all duration-300" id="modal-card">
+                
+                <!-- Modal Header -->
+                <div class="flex items-center justify-between border-b border-slate-50 pb-4">
+                    <h3 class="font-bold text-slate-900 text-lg">Create Customer Profile</h3>
+                    <button onclick="toggleModal(false)" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-50 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Modal Form -->
+                <form id="create-customer-form" class="space-y-4">
+                    <div>
+                        <label for="customer-name" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Full Name</label>
+                        <input type="text" id="customer-name" required
+                               class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-all duration-200"
+                               placeholder="e.g. Ahmet Yilmaz">
+                    </div>
+
+                    <div>
+                        <label for="customer-phone" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Phone Number</label>
+                        <input type="tel" id="customer-phone" required
+                               class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-all duration-200"
+                               placeholder="e.g. 5551234567">
+                    </div>
+
+                    <button type="submit" id="modal-submit-btn"
+                            class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-indigo-100 hover:shadow-xl hover:shadow-indigo-200/50 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2">
+                        Create Profile
+                    </button>
+                </form>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Customer Logic Script -->
+    <script>
+        // Modal toggler
+        function toggleModal(show) {
+            const modal = document.getElementById('addCustomerModal');
+            const card = document.getElementById('modal-card');
+            if (show) {
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    card.classList.remove('scale-95');
+                }, 10);
+            } else {
+                card.classList.add('scale-95');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                }, 150);
+            }
+        }
+
+        // Fetch and render customers
+        async function fetchCustomers() {
+            const tbody = document.getElementById('customer-table-body');
+            try {
+                const response = await fetch('/api/customers');
+                const customers = await response.json();
+
+                if (customers.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="4" class="py-16 text-center text-slate-400 font-medium">
+                                <div class="space-y-2">
+                                    <p class="text-sm font-semibold">No customers registered yet</p>
+                                    <p class="text-xs">Click "Add Customer" to create your first account profile.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                tbody.innerHTML = '';
+                customers.forEach(c => {
+                    const balance = c.balance !== null ? parseFloat(c.balance).toFixed(2) : '0.00';
+                    const balanceClass = parseFloat(balance) > 0 ? 'text-rose-600 font-bold' : 'text-slate-400 font-medium';
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-slate-50/50 transition-colors">
+                            <td class="py-4 px-6 font-semibold text-slate-400">#${c.id}</td>
+                            <td class="py-4 px-6 font-bold text-slate-900">${c.name}</td>
+                            <td class="py-4 px-6 text-slate-500 font-semibold">${c.phone}</td>
+                            <td class="py-4 px-6 text-right ${balanceClass}">$${balance}</td>
+                        </tr>
+                    `;
+                });
+            } catch (err) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="py-12 text-center text-rose-500 font-semibold">Failed to fetch customer list.</td>
+                    </tr>
+                `;
+            }
+        }
+
+        // Handle Add Customer Submission
+        document.getElementById('create-customer-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('modal-submit-btn');
+            const name = document.getElementById('customer-name').value;
+            const phone = document.getElementById('customer-phone').value;
+
+            btn.disabled = true;
+            try {
+                const res = await fetch('/api/customers', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: name,
+                        phone: phone,
+                        balance: 0.00
+                    })
+                });
+
+                if (res.ok) {
+                    window.showToast("Customer profile created successfully!");
+                    document.getElementById('create-customer-form').reset();
+                    toggleModal(false);
+                    fetchCustomers();
+                } else {
+                    const txt = await res.text();
+                    window.showToast(txt || "Failed to create customer.", "error");
+                }
+            } catch (err) {
+                window.showToast("Server connection error.", "error");
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        // Load customers on start
+        window.addEventListener('DOMContentLoaded', fetchCustomers);
+    </script>
+</body>
+</html>

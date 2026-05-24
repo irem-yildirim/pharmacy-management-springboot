@@ -63,219 +63,326 @@
             </div>
         </div>
 
-        <!-- Inventory Client Scripts -->
-        <script>
-            let allDrugs = [];
-
-            async function fetchDrugs() {
-                try {
-                    const response = await fetch('/api/drugs');
-                    if (response.ok) {
-                        allDrugs = await response.json();
-                        renderTable(allDrugs);
-                    } else {
-                        showToast('Failed to fetch product inventory', 'error');
-                    }
-                } catch (error) {
-                    console.error('Error fetching drugs:', error);
-                    showToast('Connection error to product servers', 'error');
-                }
-            }
-
-            function renderTable(drugsList) {
-                const tbody = document.getElementById('inventory-table-body');
-                const badge = document.getElementById('inventory-count-badge');
+        <!-- Edit Drug Modal -->
+        <div id="editDrugModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 backdrop-blur-sm hidden transition-all duration-300">
+            <div class="bg-white w-full max-w-md rounded-3xl border border-slate-100 shadow-2xl p-8 space-y-6 transform scale-95 transition-all duration-300" id="edit-modal-card">
                 
-                badge.textContent = `${drugsList.length} Product${drugsList.length === 1 ? '' : 's'} Total`;
+                <!-- Modal Header -->
+                <div class="flex items-center justify-between border-b border-slate-50 pb-4">
+                    <h3 class="font-bold text-slate-900 text-lg">Edit Drug Details</h3>
+                    <button onclick="toggleEditModal(false)" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-50 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
 
-                if (drugsList.length === 0) {
-                    tbody.innerHTML = `
-                        <tr>
-                            <td colspan="7" class="px-6 py-12 text-center text-slate-400 font-medium">
-                                No active drugs found in database.
-                            </td>
-                        </tr>
-                    `;
-                    return;
-                }
+                <!-- Modal Form -->
+                <form id="edit-drug-form" class="space-y-4">
+                    <input type="hidden" id="edit-barcode">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Drug Name</label>
+                        <input type="text" id="edit-name" disabled 
+                               class="w-full px-4 py-3 bg-slate-100 border border-slate-200 rounded-xl text-slate-400 font-semibold text-sm focus:outline-none" />
+                    </div>
+                    <div>
+                        <label for="edit-selling-price" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Patient Selling Price ($)</label>
+                        <input type="number" id="edit-selling-price" required min="0.01" step="0.01" 
+                               class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-all duration-200" />
+                    </div>
+                    <div>
+                        <label for="edit-min-stock" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Minimum Stock Alert Threshold</label>
+                        <input type="number" id="edit-min-stock" required min="1" 
+                               class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-all duration-200" />
+                    </div>
+                    <button type="submit" id="edit-submit-btn" 
+                            class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-indigo-100 hover:shadow-xl hover:shadow-indigo-200/50 active:scale-[0.98] transition-all duration-200">
+                        Save Changes
+                    </button>
+                </form>
+            </div>
+        </div>
 
-                let html = '';
-                drugsList.forEach((drug, index) => {
-                    const presName = drug.presTypeName || 'None';
-                    let rxBadge = '';
-                    if (presName === 'Red' || presName.includes('Red')) {
-                        rxBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-rose-50 text-rose-700 font-bold border border-rose-200">Red Rx</span>`;
-                    } else if (presName === 'Green' || presName.includes('Green')) {
-                        rxBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-emerald-50 text-emerald-700 font-bold border border-emerald-200">Green Rx</span>`;
-                    } else if (presName === 'White' || presName.includes('White')) {
-                        rxBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-blue-50 text-blue-700 font-bold border border-blue-200">White Rx</span>`;
-                    } else if (presName === 'Normal' || presName.includes('Normal')) {
-                        rxBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-slate-50 text-slate-600 font-bold border border-slate-200">Normal</span>`;
-                    }
-
-                    const totalStock = drug.totalStock !== null && drug.totalStock !== undefined ? drug.totalStock : 0;
-                    const stockColor = totalStock <= 0 ? 'text-rose-600 bg-rose-50' : (totalStock < (drug.minStockAlert || 10) ? 'text-amber-600 bg-amber-50' : 'text-emerald-600 bg-emerald-50');
-
-                    const rowId = `row-${index}`;
-                    const drawerId = `drawer-${index}`;
-
-                    html += `
-                        <tr id="${rowId}" class="hover:bg-slate-50/50 transition cursor-pointer" onclick="toggleDrawer('${drawerId}', '${rowId}')">
-                            <td class="px-4 py-4 text-center">
-                                <svg id="arrow-${drawerId}" class="w-4 h-4 text-slate-400 transition-transform duration-200" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
-                                </svg>
-                            </td>
-                            <td class="px-6 py-4">
-                                <span class="font-mono text-xs text-slate-500 bg-slate-100 border border-slate-200/80 px-2.5 py-1 rounded-lg select-all">
-                                    ${drug.barcode}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4">
-                                <span class="font-bold text-slate-900">${drug.name}</span>
-                            </td>
-                            <td class="px-6 py-4 text-slate-500 font-medium">${drug.categoryName || 'Unassigned'}</td>
-                            <td class="px-6 py-4">${rxBadge}</td>
-                            <td class="px-6 py-4 text-center">
-                                <span class="px-2.5 py-1 rounded-full font-bold text-xs ${stockColor}">${totalStock} units</span>
-                            </td>
-                            <td class="px-6 py-4 text-center">
-                                <div class="flex items-center justify-center gap-2" onclick="event.stopPropagation();">
-                                    <button onclick="editPlaceholder('${drug.barcode}')" class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition" title="Edit Drug">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
-                                        </svg>
-                                    </button>
-                                    <button onclick="confirmDelete('${drug.barcode}', '${drug.name}')" class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition" title="Delete Drug (Soft-Delete)">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                        </svg>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr id="${drawerId}" class="hidden">
-                            <td colspan="7" class="p-0">
-                                <div class="bg-slate-50/80 border-t border-slate-100 px-8 py-5">
-                                    <div class="flex items-center gap-2 mb-3">
-                                        <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                                        </svg>
-                                        <h5 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Active Purchase Batches</h5>
-                                    </div>
-                                    ${renderBatchTable(drug.batches)}
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                });
-                tbody.innerHTML = html;
-            }
-
-            function renderBatchTable(batches) {
-                if (!batches || batches.length === 0) {
-                    return '<p class="text-xs text-slate-400 italic py-2">No active purchase batches for this drug.</p>';
-                }
-
-                let html = `
-                    <table class="w-full text-left border-collapse bg-white rounded-xl overflow-hidden border border-slate-200/80 shadow-sm">
-                        <thead>
-                            <tr class="bg-slate-50 text-[10px] font-bold tracking-wider text-slate-400 uppercase border-b border-slate-100">
-                                <th class="px-4 py-2.5">Batch ID</th>
-                                <th class="px-4 py-2.5">Purchase Price</th>
-                                <th class="px-4 py-2.5">Expiration Date</th>
-                                <th class="px-4 py-2.5 text-center">Remaining Qty</th>
-                                <th class="px-4 py-2.5 text-center">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-xs divide-y divide-slate-100 text-slate-600">
-                `;
-
-                batches.forEach(batch => {
-                    let statusBadge = '';
-                    if (batch.status === 'EXPIRED') {
-                        statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] bg-rose-50 text-rose-600 font-bold">EXPIRED</span>';
-                    } else if (batch.status === 'CRITICAL') {
-                        statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] bg-amber-50 text-amber-600 font-bold">CRITICAL</span>';
-                    } else if (batch.status === 'WARNING') {
-                        statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] bg-yellow-50 text-yellow-600 font-bold">WARNING</span>';
-                    } else {
-                        statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] bg-emerald-50 text-emerald-600 font-bold">OK</span>';
-                    }
-
-                    html += `
-                        <tr class="hover:bg-slate-50/50 transition">
-                            <td class="px-4 py-3 font-mono font-bold text-slate-700">#${batch.id}</td>
-                            <td class="px-4 py-3 font-semibold text-slate-700">$${parseFloat(batch.purchasePrice || 0).toFixed(2)}</td>
-                            <td class="px-4 py-3 font-mono text-slate-500">${batch.expirationDate}</td>
-                            <td class="px-4 py-3 text-center font-bold text-slate-800">${batch.remainingQuantity}</td>
-                            <td class="px-4 py-3 text-center">${statusBadge}</td>
-                        </tr>
-                    `;
-                });
-
-                html += '</tbody></table>';
-                return html;
-            }
-
-            function toggleDrawer(drawerId, rowId) {
-                const drawer = document.getElementById(drawerId);
-                const arrow = document.getElementById('arrow-' + drawerId);
-
-                if (drawer.classList.contains('hidden')) {
-                    drawer.classList.remove('hidden');
-                    arrow.style.transform = 'rotate(90deg)';
-                } else {
-                    drawer.classList.add('hidden');
-                    arrow.style.transform = 'rotate(0deg)';
-                }
-            }
-
-            function filterTable() {
-                const query = document.getElementById('search-input').value.toLowerCase().trim();
-                if (query === '') {
-                    renderTable(allDrugs);
-                    return;
-                }
-                const filtered = allDrugs.filter(drug => 
-                    drug.name.toLowerCase().includes(query) || 
-                    drug.barcode.toLowerCase().includes(query)
-                );
-                renderTable(filtered);
-            }
-
-            function confirmDelete(barcode, name) {
-                if (confirm(`Are you absolutely sure you want to delete ${name}?\nThis is a soft-delete action: the product will be archived but remains in past sale records.`)) {
-                    executeDelete(barcode, name);
-                }
-            }
-
-            async function executeDelete(barcode, name) {
-                try {
-                    const response = await fetch(`/api/drugs/${barcode}`, {
-                        method: 'DELETE'
-                    });
-
-                    if (response.ok) {
-                        showToast(`Successfully archived ${name}`, 'success');
-                        fetchDrugs();
-                    } else {
-                        showToast(`Failed to archive product ${name}`, 'error');
-                    }
-                } catch (error) {
-                    console.error('Error soft deleting drug:', error);
-                    showToast('Connection error to archive servers', 'error');
-                }
-            }
-
-            function editPlaceholder(barcode) {
-                showToast('Interactive profile editing is fully configured in the central data console', 'success');
-            }
-
-            window.addEventListener('DOMContentLoaded', () => {
-                fetchDrugs();
-            });
-        </script>
     </main>
+
+    <!-- Inventory Client Scripts -->
+    <script>
+        let allDrugs = [];
+
+        async function fetchDrugs() {
+            try {
+                const response = await fetch('/api/drugs');
+                if (response.ok) {
+                    allDrugs = await response.json();
+                    renderTable(allDrugs);
+                } else {
+                    showToast('Failed to fetch product inventory', 'error');
+                }
+            } catch (error) {
+                console.error('Error fetching drugs:', error);
+                showToast('Connection error to product servers', 'error');
+            }
+        }
+
+        function renderTable(drugsList) {
+            const tbody = document.getElementById('inventory-table-body');
+            const badge = document.getElementById('inventory-count-badge');
+            
+            badge.textContent = `${drugsList.length} Product${drugsList.length === 1 ? '' : 's'} Total`;
+
+            if (drugsList.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="px-6 py-12 text-center text-slate-400 font-medium">
+                            No active drugs found in database.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            let html = '';
+            drugsList.forEach((drug, index) => {
+                const presName = drug.presTypeName || 'None';
+                let rxBadge = '';
+                if (presName === 'Red' || presName.includes('Red')) {
+                    rxBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-rose-50 text-rose-700 font-bold border border-rose-200">Red Rx</span>`;
+                } else if (presName === 'Green' || presName.includes('Green')) {
+                    rxBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-emerald-50 text-emerald-700 font-bold border border-emerald-200">Green Rx</span>`;
+                } else if (presName === 'White' || presName.includes('White')) {
+                    rxBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-blue-50 text-blue-700 font-bold border border-blue-200">White Rx</span>`;
+                } else if (presName === 'Normal' || presName.includes('Normal')) {
+                    rxBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-slate-50 text-slate-600 font-bold border border-slate-200">Normal</span>`;
+                }
+
+                const totalStock = drug.totalStock !== null && drug.totalStock !== undefined ? drug.totalStock : 0;
+                const stockColor = totalStock <= 0 ? 'text-rose-600 bg-rose-50' : (totalStock < (drug.minStockAlert || 10) ? 'text-amber-600 bg-amber-50' : 'text-emerald-600 bg-emerald-50');
+
+                const rowId = `row-${index}`;
+                const drawerId = `drawer-${index}`;
+
+                html += `
+                    <tr id="${rowId}" class="hover:bg-slate-50/50 transition cursor-pointer" onclick="toggleDrawer('${drawerId}', '${rowId}')">
+                        <td class="px-4 py-4 text-center">
+                            <svg id="arrow-${drawerId}" class="w-4 h-4 text-slate-400 transition-transform duration-200" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="font-mono text-xs text-slate-500 bg-slate-100 border border-slate-200/80 px-2.5 py-1 rounded-lg select-all">
+                                ${drug.barcode}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="font-bold text-slate-900">${drug.name}</span>
+                        </td>
+                        <td class="px-6 py-4 text-slate-500 font-medium">${drug.categoryName || 'Unassigned'}</td>
+                        <td class="px-6 py-4">${rxBadge}</td>
+                        <td class="px-6 py-4 text-center">
+                            <span class="px-2.5 py-1 rounded-full font-bold text-xs ${stockColor}">${totalStock} units</span>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <div class="flex items-center justify-center gap-2" onclick="event.stopPropagation();">
+                                <button onclick="openEditModal('${drug.barcode}')" class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition" title="Edit Drug">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                                    </svg>
+                                </button>
+                                <button onclick="confirmDelete('${drug.barcode}', '${drug.name}')" class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition" title="Delete Drug">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr id="${drawerId}" class="hidden">
+                        <td colspan="7" class="p-0">
+                            <div class="bg-slate-50/80 border-t border-slate-100 px-8 py-5">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                                    </svg>
+                                    <h5 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Active Purchase Batches</h5>
+                                </div>
+                                ${renderBatchTable(drug.batches)}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        function renderBatchTable(batches) {
+            if (!batches || batches.length === 0) {
+                return '<p class="text-xs text-slate-400 italic py-2">No active purchase batches for this drug.</p>';
+            }
+
+            let html = `
+                <table class="w-full text-left border-collapse bg-white rounded-xl overflow-hidden border border-slate-200/80 shadow-sm">
+                    <thead>
+                        <tr class="bg-slate-50 text-[10px] font-bold tracking-wider text-slate-400 uppercase border-b border-slate-100">
+                            <th class="px-4 py-2.5">Batch ID</th>
+                            <th class="px-4 py-2.5">Purchase Price</th>
+                            <th class="px-4 py-2.5">Expiration Date</th>
+                            <th class="px-4 py-2.5 text-center">Remaining Qty</th>
+                            <th class="px-4 py-2.5 text-center">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-xs divide-y divide-slate-100 text-slate-600">
+            `;
+
+            batches.forEach(batch => {
+                let statusBadge = '';
+                if (batch.status === 'EXPIRED') {
+                    statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] bg-rose-50 text-rose-600 font-bold">EXPIRED</span>';
+                } else if (batch.status === 'CRITICAL') {
+                    statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] bg-amber-50 text-amber-600 font-bold">CRITICAL</span>';
+                } else if (batch.status === 'WARNING') {
+                    statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] bg-yellow-50 text-yellow-600 font-bold">WARNING</span>';
+                } else {
+                    statusBadge = '<span class="px-2 py-0.5 rounded-full text-[10px] bg-emerald-50 text-emerald-600 font-bold">OK</span>';
+                }
+
+                html += `
+                    <tr class="hover:bg-slate-50/50 transition">
+                        <td class="px-4 py-3 font-mono font-bold text-slate-700">#${batch.id}</td>
+                        <td class="px-4 py-3 font-semibold text-slate-700">$${parseFloat(batch.purchasePrice || 0).toFixed(2)}</td>
+                        <td class="px-4 py-3 font-mono text-slate-500">${batch.expirationDate}</td>
+                        <td class="px-4 py-3 text-center font-bold text-slate-800">${batch.remainingQuantity}</td>
+                        <td class="px-4 py-3 text-center">${statusBadge}</td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table>';
+            return html;
+        }
+
+        function toggleDrawer(drawerId, rowId) {
+            const drawer = document.getElementById(drawerId);
+            const arrow = document.getElementById('arrow-' + drawerId);
+
+            if (drawer.classList.contains('hidden')) {
+                drawer.classList.remove('hidden');
+                arrow.style.transform = 'rotate(90deg)';
+            } else {
+                drawer.classList.add('hidden');
+                arrow.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        function filterTable() {
+            const query = document.getElementById('search-input').value.toLowerCase().trim();
+            if (query === '') {
+                renderTable(allDrugs);
+                return;
+            }
+            const filtered = allDrugs.filter(drug => 
+                drug.name.toLowerCase().includes(query) || 
+                drug.barcode.toLowerCase().includes(query)
+            );
+            renderTable(filtered);
+        }
+
+        function confirmDelete(barcode, name) {
+            if (confirm(`Are you absolutely sure you want to delete ${name}?\nThis is a soft-delete action: the product will be archived but remains in past sale records.`)) {
+                executeDelete(barcode, name);
+            }
+        }
+
+        async function executeDelete(barcode, name) {
+            try {
+                const response = await fetch(`/api/drugs/${barcode}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    showToast(`Successfully archived ${name}`, 'success');
+                    fetchDrugs();
+                } else {
+                    showToast(`Failed to archive product ${name}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error soft deleting drug:', error);
+                showToast('Connection error to archive servers', 'error');
+            }
+        }
+
+        // --- EDIT DRUG MODAL LOGIC ---
+        function toggleEditModal(show) {
+            const modal = document.getElementById('editDrugModal');
+            const card = document.getElementById('edit-modal-card');
+            if (show) {
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    card.classList.remove('scale-95');
+                }, 10);
+            } else {
+                card.classList.add('scale-95');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                }, 150);
+            }
+        }
+
+        async function openEditModal(barcode) {
+            try {
+                const response = await fetch(`/api/drugs/${barcode}`);
+                if (!response.ok) {
+                    showToast("Failed to fetch drug specifications", "error");
+                    return;
+                }
+                const drug = await response.json();
+                
+                // Populate inputs
+                document.getElementById('edit-barcode').value = drug.barcode;
+                document.getElementById('edit-name').value = drug.name;
+                document.getElementById('edit-selling-price').value = drug.currentSellingPrice;
+                document.getElementById('edit-min-stock').value = drug.minStockAlert !== null ? drug.minStockAlert : 10;
+                
+                toggleEditModal(true);
+            } catch (err) {
+                showToast("Connection failed", "error");
+            }
+        }
+
+        document.getElementById('edit-drug-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const barcode = document.getElementById('edit-barcode').value;
+            const price = parseFloat(document.getElementById('edit-selling-price').value);
+            const minStock = parseInt(document.getElementById('edit-min-stock').value);
+            const btn = document.getElementById('edit-submit-btn');
+
+            btn.disabled = true;
+            try {
+                const res = await fetch(`/api/drugs/${barcode}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        currentSellingPrice: price,
+                        minStockAlert: minStock
+                    })
+                });
+
+                if (res.ok) {
+                    showToast("Drug updated successfully!");
+                    toggleEditModal(false);
+                    fetchDrugs();
+                } else {
+                    showToast("Failed to save changes.", "error");
+                }
+            } catch (err) {
+                showToast("Network error occurred.", "error");
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchDrugs();
+        });
+    </script>
 </body>
 </html>
