@@ -1,6 +1,7 @@
 <!-- src/main/resources/templates/settings/index.html -->
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       th:replace="~{fragments/layout :: layout(~{::main})}">
 <body>
     <main class="space-y-8">
@@ -23,7 +24,7 @@
                     class="px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 text-slate-500 hover:text-slate-900">
                 Categories
             </button>
-            <button th:if="${user != null and user.role.name() == 'ADMIN'}" onclick="switchTab('staff-tab')" id="tab-staff" 
+            <button sec:authorize="hasRole('ADMIN')" onclick="switchTab('staff-tab')" id="tab-staff" 
                     class="px-5 py-2.5 rounded-xl font-bold text-sm transition-all duration-200 text-slate-500 hover:text-slate-900">
                 Staff Management
             </button>
@@ -110,7 +111,7 @@
         </div>
 
         <!-- TAB 3: Staff Management Panel (ADMIN only) -->
-        <div th:if="${user != null and user.role.name() == 'ADMIN'}" id="staff-tab" class="hidden">
+        <div sec:authorize="hasRole('ADMIN')" id="staff-tab" class="hidden">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 <!-- Left: Create Form -->
                 <div class="lg:col-span-4 bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-100/40 p-8 h-fit">

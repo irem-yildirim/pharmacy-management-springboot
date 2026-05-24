@@ -10,6 +10,8 @@ import com.pharmacy.entity.PresType;
 import com.pharmacy.entity.Purchase;
 import com.pharmacy.repository.PurchaseRepository;
 import com.pharmacy.service.DrugService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -21,12 +23,14 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/drugs")
 @RequiredArgsConstructor
+@Tag(name = "Drugs", description = "Pharmaceutical product catalog management")
 public class DrugController {
 
     private final DrugService drugService;
     private final PurchaseRepository purchaseRepository;
 
     @GetMapping
+    @Operation(summary = "List all active drugs", description = "Returns all active drugs with total stock and active purchase batches")
     public ResponseEntity<List<DrugResponse>> getAllActive() {
         List<DrugResponse> responses = drugService.findAllActive().stream()
                 .map(drug -> {
@@ -45,6 +49,7 @@ public class DrugController {
     }
 
     @GetMapping("/{barcode}")
+    @Operation(summary = "Get drug by barcode", description = "Returns a single drug with stock and batch details")
     public ResponseEntity<DrugResponse> getByBarcode(@PathVariable String barcode) {
         Drug drug = drugService.findByBarcode(barcode);
         DrugResponse dto = DrugResponse.fromEntity(drug);
@@ -59,6 +64,7 @@ public class DrugController {
     }
 
     @PostMapping
+    @Operation(summary = "Register a new drug", description = "Creates a new pharmaceutical product record in the catalog")
     public ResponseEntity<DrugResponse> save(@Valid @RequestBody DrugCreateRequest request) {
         Drug drug = Drug.builder()
                 .barcode(request.getBarcode())
@@ -75,12 +81,14 @@ public class DrugController {
     }
 
     @DeleteMapping("/{barcode}")
+    @Operation(summary = "Soft-delete a drug", description = "Sets isActive=false; does not physically remove the record")
     public ResponseEntity<Void> softDelete(@PathVariable String barcode) {
         drugService.softDelete(barcode);
         return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{barcode}")
+    @Operation(summary = "Update drug price or stock alert", description = "Modifies the current selling price and minimum stock alert threshold")
     public ResponseEntity<DrugResponse> update(
             @PathVariable String barcode,
             @RequestBody java.util.Map<String, Object> payload) {

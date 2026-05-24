@@ -1,0 +1,5 @@
+com\pharmacy\EczaneApplicationTests.class
+com\pharmacy\service\FinanceServiceTest.class
+com\pharmacy\service\DrugServiceTest.class
+com\pharmacy\service\ExpiryServiceTest.class
+com\pharmacy\service\SaleServiceTest.class

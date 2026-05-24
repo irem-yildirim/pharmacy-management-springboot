@@ -7,7 +7,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
-import org.springframework.security.crypto.bcrypt.BCrypt;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @SpringBootApplication
 public class EczaneApplication {
@@ -17,19 +17,18 @@ public class EczaneApplication {
     }
 
     @Bean
-    public CommandLineRunner initDatabase(UserRepository userRepository) {
+    public CommandLineRunner initDatabase(UserRepository userRepository, PasswordEncoder encoder) {
         return args -> {
-            // Seed / Force Reset Admin
             userRepository.findByUsername("admin").ifPresentOrElse(
                 admin -> {
-                    admin.setPassword(BCrypt.hashpw("password123", BCrypt.gensalt()));
+                    admin.setPassword(encoder.encode("password123"));
                     userRepository.save(admin);
                 },
                 () -> {
                     User admin = User.builder()
                             .name("Admin User")
                             .username("admin")
-                            .password(BCrypt.hashpw("password123", BCrypt.gensalt()))
+                            .password(encoder.encode("password123"))
                             .role(Role.ADMIN)
                             .isActive(true)
                             .build();
@@ -37,17 +36,16 @@ public class EczaneApplication {
                 }
             );
 
-            // Seed / Force Reset Pharmacist
             userRepository.findByUsername("eczaci_ayse").ifPresentOrElse(
                 pharmacist -> {
-                    pharmacist.setPassword(BCrypt.hashpw("password123", BCrypt.gensalt()));
+                    pharmacist.setPassword(encoder.encode("password123"));
                     userRepository.save(pharmacist);
                 },
                 () -> {
                     User pharmacist = User.builder()
                             .name("Pharmacist Ayse")
                             .username("eczaci_ayse")
-                            .password(BCrypt.hashpw("password123", BCrypt.gensalt()))
+                            .password(encoder.encode("password123"))
                             .role(Role.PHARMACIST)
                             .isActive(true)
                             .build();
@@ -55,17 +53,16 @@ public class EczaneApplication {
                 }
             );
 
-            // Seed / Force Reset Cashier
             userRepository.findByUsername("kasiyer_veli").ifPresentOrElse(
                 cashier -> {
-                    cashier.setPassword(BCrypt.hashpw("password123", BCrypt.gensalt()));
+                    cashier.setPassword(encoder.encode("password123"));
                     userRepository.save(cashier);
                 },
                 () -> {
                     User cashier = User.builder()
                             .name("Cashier Veli")
                             .username("kasiyer_veli")
-                            .password(BCrypt.hashpw("password123", BCrypt.gensalt()))
+                            .password(encoder.encode("password123"))
                             .role(Role.CASHIER)
                             .isActive(true)
                             .build();

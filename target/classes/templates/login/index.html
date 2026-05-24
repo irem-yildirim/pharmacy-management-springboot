@@ -38,7 +38,7 @@
         </div>
 
         <!-- Form -->
-        <form id="login-form" class="space-y-4">
+        <form th:action="@{/api/auth/login}" method="post" class="space-y-4">
             <div>
                 <label for="username" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Username</label>
                 <div class="relative">
@@ -67,6 +67,13 @@
                 </div>
             </div>
 
+            <div th:if="${param.error}" id="error-alert" class="p-4 bg-rose-50 border border-rose-100 text-rose-700 text-xs font-semibold rounded-xl flex items-center gap-3">
+                <svg class="w-5 h-5 text-rose-500 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <span>Invalid username or password. Please try again.</span>
+            </div>
+
             <button type="submit" id="submit-btn"
                     class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-indigo-100 hover:shadow-xl hover:shadow-indigo-200/50 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2">
                 <span>Sign In</span>
@@ -77,65 +84,5 @@
         </form>
     </div>
 
-    <!-- Login Logic -->
-    <script>
-        document.getElementById('login-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const submitBtn = document.getElementById('submit-btn');
-            const alertBox = document.getElementById('error-alert');
-            const errorText = document.getElementById('error-text');
-            const usernameInput = document.getElementById('username').value;
-            const passwordInput = document.getElementById('password').value;
-
-            // Reset states
-            alertBox.classList.add('hidden');
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = `
-                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <span>Signing In...</span>
-            `;
-
-            try {
-                const response = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        username: usernameInput,
-                        password: passwordInput
-                    })
-                });
-
-                if (response.ok) {
-                    const user = await response.json();
-                    if (user.role === 'CASHIER') {
-                        window.location.href = '/pos';
-                    } else {
-                        window.location.href = '/dashboard';
-                    }
-                } else {
-                    const msg = await response.text();
-                    errorText.textContent = msg || 'Invalid username or password.';
-                    alertBox.classList.remove('hidden');
-                }
-            } catch (err) {
-                errorText.textContent = 'Server connection failed.';
-                alertBox.classList.remove('hidden');
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = `
-                    <span>Sign In</span>
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
-                    </svg>
-                `;
-            }
-        });
-    </script>
 </body>
 </html>

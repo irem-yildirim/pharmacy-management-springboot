@@ -1,15 +1,18 @@
 package com.pharmacy.controller;
 
+import com.pharmacy.config.PharmacyUserDetails;
 import com.pharmacy.entity.Sale;
 import com.pharmacy.entity.User;
 import com.pharmacy.repository.SaleRepository;
 import com.pharmacy.repository.UserRepository;
-import jakarta.servlet.http.HttpSession;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.bcrypt.BCrypt;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -21,26 +24,29 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
+@Tag(name = "Users", description = "Staff account management and individual performance tracking")
 public class UserController {
 
     private final UserRepository userRepository;
     private final SaleRepository saleRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @GetMapping
+    @Operation(summary = "List all users", description = "Returns all staff accounts with passwords hidden")
     public ResponseEntity<List<User>> getAll() {
         List<User> users = userRepository.findAll().stream()
-                .peek(u -> u.setPassword(null)) // Hide hashed passwords
+                .peek(u -> u.setPassword(null))
                 .collect(Collectors.toList());
         return ResponseEntity.ok(users);
     }
 
     @PostMapping
+    @Operation(summary = "Register a new staff user", description = "Creates a new user account with BCrypt-encoded password")
     public ResponseEntity<?> create(@Valid @RequestBody User user) {
         if (userRepository.findByUsername(user.getUsername()).isPresent()) {
             return ResponseEntity.badRequest().body("Username already exists!");
         }
-        // Hash password securely with BCrypt
-        user.setPassword(BCrypt.hashpw(user.getPassword(), BCrypt.gensalt()));
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setIsActive(true);
         User saved = userRepository.save(user);
         saved.setPassword(null);
@@ -48,15 +54,13 @@ public class UserController {
     }
 
     @GetMapping("/performance")
-    public ResponseEntity<?> getPerformance(HttpSession session) {
-        User loggedUser = (User) session.getAttribute("user");
-        if (loggedUser == null) {
-            // Testing fallback to first user (Admin) if no active session
-            loggedUser = userRepository.findById(1L).orElse(null);
-        }
+    @Operation(summary = "Get logged-in user's performance", description = "Returns total revenue, sales count, and recent transactions for the authenticated user")
+    public ResponseEntity<?> getPerformance(Authentication authentication) {
+        PharmacyUserDetails principal = (PharmacyUserDetails) authentication.getPrincipal();
+        User loggedUser = userRepository.findById(principal.getUserId()).orElse(null);
 
         if (loggedUser == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not logged in");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found");
         }
 
         List<Sale> sales = saleRepository.findByUser_IdOrderBySaleDateDesc(loggedUser.getId());

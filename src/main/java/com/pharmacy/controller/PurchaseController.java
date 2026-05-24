@@ -4,6 +4,8 @@ import com.pharmacy.entity.Drug;
 import com.pharmacy.entity.Purchase;
 import com.pharmacy.repository.DrugRepository;
 import com.pharmacy.repository.PurchaseRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -18,12 +20,14 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/purchases")
 @RequiredArgsConstructor
+@Tag(name = "Purchases", description = "Stock batch procurement and inventory intake")
 public class PurchaseController {
 
     private final PurchaseRepository purchaseRepository;
     private final DrugRepository drugRepository;
 
     @PostMapping
+    @Operation(summary = "Create a purchase batch", description = "Records a new stock intake batch for an existing drug")
     public ResponseEntity<?> createPurchase(@Valid @RequestBody PurchaseBatchRequest request) {
         Drug drug = drugRepository.findById(request.getDrugBarcode()).orElse(null);
         if (drug == null) {
