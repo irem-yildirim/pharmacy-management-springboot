@@ -58,17 +58,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
-    @ExceptionHandler(PrescriptionRequiredException.class)
-    public ResponseEntity<ErrorResponse> handlePrescriptionRequired(PrescriptionRequiredException ex) {
-        ErrorResponse response = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
-                .status(HttpStatus.BAD_REQUEST.value())
-                .error(HttpStatus.BAD_REQUEST.getReasonPhrase())
-                .message(ex.getMessage())
-                .build();
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-    }
-
     @ExceptionHandler(DuplicateEntryException.class)
     public ResponseEntity<ErrorResponse> handleDuplicateEntry(DuplicateEntryException ex) {
         ErrorResponse response = ErrorResponse.builder()

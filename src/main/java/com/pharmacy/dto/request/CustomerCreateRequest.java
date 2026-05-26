@@ -14,7 +14,7 @@ public class CustomerCreateRequest {
     @Size(max = 100, message = "Customer name must not exceed 100 characters")
     private String name;
 
-    @Size(max = 20, message = "Phone must not exceed 20 characters")
+    @Pattern(regexp = "^\\d{10}$", message = "Phone number must be exactly 10 digits")
     private String phone;
 
     @DecimalMin(value = "0.0", inclusive = true, message = "Initial balance must be greater than or equal to 0")

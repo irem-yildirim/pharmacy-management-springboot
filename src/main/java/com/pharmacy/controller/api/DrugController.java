@@ -98,10 +98,10 @@ public class DrugController {
     @Operation(summary = "Update drug price or stock alert", description = "Modifies the current selling price and minimum stock alert threshold")
     public ResponseEntity<DrugResponse> update(
             @PathVariable String barcode,
-            @RequestBody java.util.Map<String, Object> payload) {
+            @RequestBody Map<String, Object> payload) {
         Drug drug = drugService.findByBarcode(barcode);
         if (payload.containsKey("currentSellingPrice")) {
-            drug.setCurrentSellingPrice(new java.math.BigDecimal(payload.get("currentSellingPrice").toString()));
+            drug.setCurrentSellingPrice(new BigDecimal(payload.get("currentSellingPrice").toString()));
         }
         if (payload.containsKey("minStockAlert")) {
             drug.setMinStockAlert(Integer.parseInt(payload.get("minStockAlert").toString()));

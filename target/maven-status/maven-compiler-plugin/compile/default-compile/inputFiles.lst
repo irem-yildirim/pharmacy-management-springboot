@@ -3,7 +3,6 @@ C:\Users\iremy\Desktop\Java Final Projesi\src\main\java\com\pharmacy\advice\Drug
 C:\Users\iremy\Desktop\Java Final Projesi\src\main\java\com\pharmacy\advice\DuplicateEntryException.java
 C:\Users\iremy\Desktop\Java Final Projesi\src\main\java\com\pharmacy\advice\GlobalExceptionHandler.java
 C:\Users\iremy\Desktop\Java Final Projesi\src\main\java\com\pharmacy\advice\InsufficientStockException.java
-C:\Users\iremy\Desktop\Java Final Projesi\src\main\java\com\pharmacy\advice\PrescriptionRequiredException.java
 C:\Users\iremy\Desktop\Java Final Projesi\src\main\java\com\pharmacy\advice\RestrictedSaleException.java
 C:\Users\iremy\Desktop\Java Final Projesi\src\main\java\com\pharmacy\config\DataInitializer.java
 C:\Users\iremy\Desktop\Java Final Projesi\src\main\java\com\pharmacy\config\PharmacyUserDetails.java

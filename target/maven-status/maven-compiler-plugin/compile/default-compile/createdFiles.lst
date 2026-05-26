@@ -48,7 +48,6 @@ com\pharmacy\dto\request\DrugCreateRequest.class
 com\pharmacy\dto\request\CustomerCreateRequest.class
 com\pharmacy\model\PresType$PresTypeBuilder.class
 com\pharmacy\advice\InsufficientStockException.class
-com\pharmacy\advice\PrescriptionRequiredException.class
 com\pharmacy\advice\CustomerNotFoundException.class
 com\pharmacy\service\BrandService.class
 com\pharmacy\model\Drug$DrugBuilder.class

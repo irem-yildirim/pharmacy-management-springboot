@@ -7,7 +7,6 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -16,9 +15,14 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-@Component
+// ACİL DURUM VERİ SEEDER'I
+// Sunum anında veya lokal testlerde veritabanı tamamen sıfırlanırsa,
+// aşağıdaki '// @Component' satırının başındaki yorum satırını kaldırarak
+// sistemi saniyeler içinde zengin sunum verileriyle doldurabilirsiniz.
+// @Component
 @Order(1)
 @RequiredArgsConstructor
+@SuppressWarnings("null")
 public class DataInitializer implements ApplicationRunner {
 
     private final UserRepository userRepository;
@@ -158,7 +162,7 @@ public class DataInitializer implements ApplicationRunner {
         Drug drug4 = createDrugAndBatches("8699593090044", "Concerta 36 mg Tablet", psych, novartis, red, new BigDecimal("420.00"), 10);
         Drug drug5 = createDrugAndBatches("8699809090038", "Pharmaton Vitality 30 Kapsül", painkillers, sanofi, white, new BigDecimal("350.00"), 20);
         Drug drug6 = createDrugAndBatches("8699508090409", "Beloc Zok 50 mg Tablet", cardio, novartis, white, new BigDecimal("95.25"), 40);
-        Drug drug7 = createDrugAndBatches("8699522010045", "Zinnat 500 mg Tablet", antibiotics, bayer, white, new BigDecimal("210.00"), 20);
+        Drug drug7 = createDrugAndBatches("8699522010045", "Zinnat 500 mg Tablet", antibiotics, bayer, orange, new BigDecimal("210.00"), 20);
         Drug drug8 = createDrugAndBatches("8699544010072", "Lipitor 20 mg Tablet", cardio, pfizer, white, new BigDecimal("175.50"), 50);
         Drug drug9 = createDrugAndBatches("8699566010098", "Nexium 40 mg Tablet", gastro, sanofi, white, new BigDecimal("290.00"), 15);
         Drug drug10 = createDrugAndBatches("8699588010124", "Ritalin 10 mg Tablet", psych, novartis, red, new BigDecimal("380.00"), 12);

@@ -38,6 +38,7 @@ public class SecurityConfig {
                     .requestMatchers("/login", "/api/auth/login").permitAll()
                     .requestMatchers("/api/users/performance").authenticated()
                     .requestMatchers("/api/users/**").hasRole("ADMIN")
+                    .requestMatchers("/finance/**", "/api/finance/**").hasAnyRole("ADMIN", "PHARMACIST")
                     .requestMatchers("/dashboard/**", "/purchase/**", "/settings/**").hasAnyRole("ADMIN", "PHARMACIST")
                     .requestMatchers("/customer/**", "/customers/**", "/api/customers/**").hasAnyRole("ADMIN", "PHARMACIST", "CASHIER")
                     .requestMatchers("/api/purchases/**", "/api/brands/**", "/api/categories/**").hasAnyRole("ADMIN", "PHARMACIST")

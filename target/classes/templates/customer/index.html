@@ -1,17 +1,15 @@
-<!-- src/main/resources/templates/customer/index.html -->
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       th:replace="~{fragments/layout :: layout(~{::main})}">
 <body>
     <main class="space-y-8">
-        
-        <!-- Page Title & Actions -->
+
         <div class="flex items-center justify-between border-b border-slate-100 pb-5">
             <div>
                 <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Customer Registry</h2>
-                <p class="text-sm text-slate-400 font-medium">Manage patient accounts, outstanding debts, and veresiye credit histories</p>
+                <p class="text-sm text-slate-400 font-medium">Manage patient accounts, outstanding debts, and credit histories</p>
             </div>
-            
+
             <button onclick="toggleModal(true)"
                     class="flex items-center gap-2 px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl shadow-lg shadow-indigo-100 hover:shadow-xl hover:shadow-indigo-200/50 active:scale-[0.98] transition-all duration-200">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
@@ -21,16 +19,15 @@
             </button>
         </div>
 
-        <!-- Customer List Table -->
         <div class="bg-white border border-slate-100 rounded-3xl shadow-xl shadow-slate-100/40 overflow-hidden flex flex-col min-h-[400px]">
             <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse table-fixed">
+                <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="bg-slate-50/50 border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                            <th class="w-20 py-4 px-6">ID</th>
-                            <th class="w-1/3 py-4 px-6">Customer Name</th>
-                            <th class="w-1/4 py-4 px-6">Phone Number</th>
-                            <th class="w-1/4 py-4 px-6 text-right">Outstanding Debt ($)</th>
+                            <th class="w-10 py-4 px-4"></th>
+                            <th class="py-4 px-6">Customer Name</th>
+                            <th class="py-4 px-6">Phone Number</th>
+                            <th class="py-4 px-6 text-right">Outstanding Debt ($)</th>
                         </tr>
                     </thead>
                     <tbody id="customer-table-body" class="divide-y divide-slate-100 text-sm text-slate-600">
@@ -42,11 +39,9 @@
             </div>
         </div>
 
-        <!-- Add Customer Modal -->
         <div id="addCustomerModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 backdrop-blur-sm hidden transition-all duration-300">
             <div class="bg-white w-full max-w-md rounded-3xl border border-slate-100 shadow-2xl p-8 space-y-6 transform scale-95 transition-all duration-300" id="modal-card">
-                
-                <!-- Modal Header -->
+
                 <div class="flex items-center justify-between border-b border-slate-50 pb-4">
                     <h3 class="font-bold text-slate-900 text-lg">Create Customer Profile</h3>
                     <button onclick="toggleModal(false)" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-50 transition-colors">
@@ -56,7 +51,6 @@
                     </button>
                 </div>
 
-                <!-- Modal Form -->
                 <form id="create-customer-form" class="space-y-4">
                     <div>
                         <label for="customer-name" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Full Name</label>
@@ -67,7 +61,8 @@
 
                     <div>
                         <label for="customer-phone" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Phone Number</label>
-                        <input type="tel" id="customer-phone" required
+                        <input type="tel" id="customer-phone" required pattern="[0-9]{10}"
+                               title="Phone number must be exactly 10 digits"
                                class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-all duration-200"
                                placeholder="e.g. 5551234567">
                     </div>
@@ -80,26 +75,21 @@
             </div>
         </div>
 
-        <!-- Customer Logic Script -->
         <script>
-        // Modal toggler
+        let openDrawerId = null;
+
         function toggleModal(show) {
             const modal = document.getElementById('addCustomerModal');
             const card = document.getElementById('modal-card');
             if (show) {
                 modal.classList.remove('hidden');
-                setTimeout(() => {
-                    card.classList.remove('scale-95');
-                }, 10);
+                setTimeout(() => { card.classList.remove('scale-95'); }, 10);
             } else {
                 card.classList.add('scale-95');
-                setTimeout(() => {
-                    modal.classList.add('hidden');
-                }, 150);
+                setTimeout(() => { modal.classList.add('hidden'); }, 150);
             }
         }
 
-        // Fetch and render customers
         async function fetchCustomers() {
             const tbody = document.getElementById('customer-table-body');
             try {
@@ -128,41 +118,148 @@
                 customers.forEach(c => {
                     const balance = c.balance !== null ? parseFloat(c.balance).toFixed(2) : '0.00';
                     const balanceClass = parseFloat(balance) > 0 ? 'text-rose-600 font-bold' : 'text-slate-400 font-medium';
+                    const rowId = 'cust-' + c.id;
+                    const drawerId = 'drawer-' + c.id;
+
                     tbody.innerHTML += `
-                        <tr class="hover:bg-slate-50/50 transition-colors">
-                            <td class="py-4 px-6 font-semibold text-slate-400">#${c.id}</td>
+                        <tr id="${rowId}" class="hover:bg-slate-50/50 transition-colors cursor-pointer" onclick="toggleDrawer(${c.id})">
+                            <td class="py-4 px-4 text-center">
+                                <svg id="arrow-${c.id}" class="w-4 h-4 text-slate-400 transition-transform duration-200" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            </td>
                             <td class="py-4 px-6 font-bold text-slate-900">${c.name}</td>
-                            <td class="py-4 px-6 text-slate-500 font-semibold">${c.phone}</td>
+                            <td class="py-4 px-6 text-slate-500 font-semibold">${c.phone || '-'}</td>
                             <td class="py-4 px-6 text-right ${balanceClass}">$${balance}</td>
+                        </tr>
+                        <tr id="${drawerId}" class="hidden">
+                            <td colspan="4" class="p-0">
+                                <div class="bg-slate-50/80 border-t border-slate-200 px-8 py-5">
+                                    <div class="flex items-center gap-2 mb-3">
+                                        <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                                        </svg>
+                                        <h5 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Purchase History</h5>
+                                    </div>
+                                    <div id="history-${c.id}" class="text-xs text-slate-400 italic py-2">Loading history...</div>
+                                </div>
+                            </td>
                         </tr>
                     `;
                 });
             } catch (err) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="4" class="py-12 text-center text-rose-500 font-semibold">Failed to fetch customer list.</td>
-                    </tr>
-                `;
+                tbody.innerHTML = `<tr><td colspan="4" class="py-12 text-center text-rose-500 font-semibold">Failed to fetch customer list.</td></tr>`;
             }
         }
 
-        // Handle Add Customer Submission
+        async function toggleDrawer(customerId) {
+            const drawer = document.getElementById('drawer-' + customerId);
+            const arrow = document.getElementById('arrow-' + customerId);
+
+            if (openDrawerId !== null && openDrawerId !== customerId) {
+                const prevDrawer = document.getElementById('drawer-' + openDrawerId);
+                const prevArrow = document.getElementById('arrow-' + openDrawerId);
+                if (prevDrawer) prevDrawer.classList.add('hidden');
+                if (prevArrow) prevArrow.style.transform = 'rotate(0deg)';
+            }
+
+            if (drawer.classList.contains('hidden')) {
+                drawer.classList.remove('hidden');
+                arrow.style.transform = 'rotate(90deg)';
+                openDrawerId = customerId;
+                await loadHistory(customerId);
+            } else {
+                drawer.classList.add('hidden');
+                arrow.style.transform = 'rotate(0deg)';
+                openDrawerId = null;
+            }
+        }
+
+        async function loadHistory(customerId) {
+            const container = document.getElementById('history-' + customerId);
+            try {
+                const response = await fetch('/api/sales?customerId=' + customerId);
+                if (!response.ok) {
+                    container.innerHTML = '<p class="text-xs text-rose-500">Failed to load purchase history.</p>';
+                    return;
+                }
+                const sales = await response.json();
+
+                if (!sales || sales.length === 0) {
+                    container.innerHTML = '<p class="text-xs text-slate-400 italic py-2">No purchase history for this customer.</p>';
+                    return;
+                }
+
+                let html = `
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse bg-white rounded-xl overflow-hidden border border-slate-200/80 shadow-sm">
+                            <thead>
+                                <tr class="bg-slate-50 text-[10px] font-bold tracking-wider text-slate-400 uppercase border-b border-slate-100">
+                                    <th class="px-4 py-2.5">Sale Date</th>
+                                    <th class="px-4 py-2.5">Drug Name</th>
+                                    <th class="px-4 py-2.5 text-center">Batch ID</th>
+                                    <th class="px-4 py-2.5 text-center">Qty</th>
+                                    <th class="px-4 py-2.5 text-right">Unit Price</th>
+                                    <th class="px-4 py-2.5 text-right">Total</th>
+                                    <th class="px-4 py-2.5">Expiration Date</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-xs divide-y divide-slate-100 text-slate-600">
+                `;
+
+                sales.forEach(sale => {
+                    const items = sale.items || [];
+                    const saleDate = sale.saleDate ? new Date(sale.saleDate).toLocaleString('tr-TR', { dateStyle: 'short', timeStyle: 'short' }) : '-';
+
+                    if (items.length === 0) {
+                        html += `
+                            <tr class="hover:bg-slate-50/50 transition">
+                                <td class="px-4 py-3 font-mono text-slate-500">${saleDate}</td>
+                                <td colspan="6" class="px-4 py-3 text-slate-400 italic">No item details</td>
+                            </tr>
+                        `;
+                    } else {
+                        items.forEach((item, idx) => {
+                            const lineTotal = (item.unitPrice || 0) * (item.quantity || 0);
+                            html += `
+                                <tr class="hover:bg-slate-50/50 transition">
+                                    ${idx === 0 ? `<td class="px-4 py-3 font-mono text-slate-500" rowspan="${items.length}">${saleDate}</td>` : ''}
+                                    <td class="px-4 py-3 font-semibold text-slate-700">${item.drugName || '-'}</td>
+                                    <td class="px-4 py-3 text-center font-mono text-slate-500">#${item.purchaseId || '-'}</td>
+                                    <td class="px-4 py-3 text-center font-bold text-slate-700">${item.quantity || 0}</td>
+                                    <td class="px-4 py-3 text-right">$${(item.unitPrice || 0).toFixed(2)}</td>
+                                    <td class="px-4 py-3 text-right font-bold text-slate-800">$${lineTotal.toFixed(2)}</td>
+                                    <td class="px-4 py-3 font-mono text-slate-500">${item.expirationDate || '-'}</td>
+                                </tr>
+                            `;
+                        });
+                    }
+                });
+
+                html += '</tbody></table></div>';
+                container.innerHTML = html;
+            } catch (err) {
+                container.innerHTML = '<p class="text-xs text-rose-500">Connection error loading history.</p>';
+            }
+        }
+
         document.getElementById('create-customer-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             const btn = document.getElementById('modal-submit-btn');
             const name = document.getElementById('customer-name').value;
             const phone = document.getElementById('customer-phone').value;
 
+            if (!/^\d{10}$/.test(phone)) {
+                window.showToast("Phone number must be exactly 10 digits.", "error");
+                return;
+            }
+
             btn.disabled = true;
             try {
                 const res = await fetch('/api/customers', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        name: name,
-                        phone: phone,
-                        balance: 0.00
-                    })
+                    body: JSON.stringify({ name: name, phone: phone, balance: 0.00 })
                 });
 
                 if (res.ok) {
@@ -171,8 +268,8 @@
                     toggleModal(false);
                     fetchCustomers();
                 } else {
-                    const txt = await res.text();
-                    window.showToast(txt || "Failed to create customer.", "error");
+                    const errData = await res.json();
+                    window.showToast(errData.message || "Failed to create customer.", "error");
                 }
             } catch (err) {
                 window.showToast("Server connection error.", "error");
@@ -181,7 +278,6 @@
             }
         });
 
-        // Load customers on start
         window.addEventListener('DOMContentLoaded', fetchCustomers);
     </script>
     </main>
