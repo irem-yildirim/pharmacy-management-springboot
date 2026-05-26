@@ -139,4 +139,12 @@ public class SaleService {
 
         return saleItems;
     }
+
+    public List<Sale> findByCustomerId(Long customerId) {
+        return saleRepository.findByCustomer_IdOrderBySaleDateDesc(customerId);
+    }
+
+    public List<Sale> findAll() {
+        return saleRepository.findAllByOrderBySaleDateDesc();
+    }
 }

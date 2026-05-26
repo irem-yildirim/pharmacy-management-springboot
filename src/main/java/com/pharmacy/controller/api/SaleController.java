@@ -14,6 +14,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @RestController
 @RequestMapping("/api/sales")
 @RequiredArgsConstructor
@@ -21,6 +24,18 @@ import org.springframework.web.bind.annotation.*;
 public class SaleController {
 
     private final SaleService saleService;
+
+    @GetMapping
+    @Operation(summary = "List sales", description = "Returns all sales or filter by customerId")
+    public ResponseEntity<List<SaleResponse>> getAllSales(@RequestParam(required = false) Long customerId) {
+        List<Sale> sales = customerId != null
+                ? saleService.findByCustomerId(customerId)
+                : saleService.findAll();
+        List<SaleResponse> responses = sales.stream()
+                .map(SaleResponse::fromEntity)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(responses);
+    }
 
     @PostMapping
     @Operation(summary = "Create a new sale", description = "Processes a POS sale with FIFO batch deduction, prescription validation, and customer balance update")

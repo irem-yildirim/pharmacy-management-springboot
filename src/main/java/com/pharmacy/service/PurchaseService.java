@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -37,5 +38,9 @@ public class PurchaseService {
 
     public int getTotalStock(String barcode) {
         return purchaseRepository.sumRemainingByDrugBarcode(barcode);
+    }
+
+    public List<Purchase> findAll() {
+        return purchaseRepository.findAllByOrderByPurchaseDateDesc();
     }
 }

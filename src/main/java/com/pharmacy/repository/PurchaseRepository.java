@@ -24,4 +24,8 @@ public interface PurchaseRepository extends JpaRepository<Purchase, Long> {
 
     List<Purchase> findByDrug_BarcodeAndExpirationDateBeforeAndRemainingQuantityGreaterThan(
             String barcode, LocalDate date, int minQty);
+
+    List<Purchase> findAllByOrderByPurchaseDateDesc();
+
+    List<Purchase> findByRemainingQuantityAndExpirationDateBefore(int remainingQty, LocalDate date);
 }
