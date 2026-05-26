@@ -16,6 +16,7 @@ public class SaleItemResponse {
     private String drugName;
     private Integer quantity;
     private BigDecimal unitPrice;
+    private BigDecimal purchasePrice;
     private LocalDate expirationDate;
     private Long purchaseId;
 
@@ -29,6 +30,7 @@ public class SaleItemResponse {
                 .drugName(item.getPurchase() != null && item.getPurchase().getDrug() != null ? item.getPurchase().getDrug().getName() : null)
                 .quantity(item.getQuantity())
                 .unitPrice(item.getUnitPrice())
+                .purchasePrice(item.getPurchase() != null ? item.getPurchase().getPurchasePrice() : null)
                 .expirationDate(item.getPurchase() != null ? item.getPurchase().getExpirationDate() : null)
                 .purchaseId(item.getPurchase() != null ? item.getPurchase().getId() : null)
                 .build();

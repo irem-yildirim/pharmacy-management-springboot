@@ -8,6 +8,7 @@ import com.pharmacy.model.SaleItem;
 import com.pharmacy.advice.DrugNotFoundException;
 import com.pharmacy.advice.InsufficientStockException;
 import com.pharmacy.advice.PrescriptionRequiredException;
+import com.pharmacy.advice.RestrictedSaleException;
 import com.pharmacy.repository.DrugRepository;
 import com.pharmacy.repository.PurchaseRepository;
 import com.pharmacy.repository.SaleRepository;
@@ -20,9 +21,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -52,6 +55,20 @@ public class SaleService {
             Drug drug = drugRepository.findById(request.getBarcode())
                     .filter(Drug::getIsActive)
                     .orElseThrow(() -> new DrugNotFoundException("Drug not found with barcode: " + request.getBarcode()));
+
+            int totalStock = purchaseRepository.sumRemainingByDrugBarcode(drug.getBarcode());
+            if (totalStock == 0) {
+                throw new RestrictedSaleException(
+                        "Cannot sell " + drug.getName() + ": stock is completely depleted.");
+            }
+
+            if (drug.getPresType() != null
+                    && drug.getPresType().getRiskLevel() != null
+                    && drug.getPresType().getRiskLevel() > 1
+                    && customerId == null) {
+                throw new RestrictedSaleException(
+                        "Restricted drug '" + drug.getName() + "' requires a registered customer. Guest checkout is not allowed.");
+            }
 
             if (drug.getPresType() != null
                     && drug.getPresType().getRiskLevel() != null
@@ -87,7 +104,10 @@ public class SaleService {
     private List<SaleItem> deductFromBatches(Drug drug, int requestedQty, Sale sale) {
         List<Purchase> batches = purchaseRepository
                 .findByDrug_BarcodeAndRemainingQuantityGreaterThanOrderByExpirationDateAsc(
-                        drug.getBarcode(), 0);
+                        drug.getBarcode(), 0)
+                .stream()
+                .filter(b -> !b.getExpirationDate().isBefore(LocalDate.now()))
+                .collect(Collectors.toList());
 
         int totalAvailable = batches.stream().mapToInt(Purchase::getRemainingQuantity).sum();
         if (totalAvailable < requestedQty) {

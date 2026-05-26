@@ -1,4 +1,4 @@
-package com.pharmacy.rest;
+package com.pharmacy.controller.api;
 
 import com.pharmacy.dto.response.DashboardStatsResponse;
 import com.pharmacy.service.FinanceService;
@@ -21,15 +21,17 @@ public class DashboardController {
     private final FinanceService financeService;
 
     @GetMapping("/stats")
-    @Operation(summary = "Get dashboard statistics", description = "Returns today's revenue and profit calculated via FIFO costing")
+    @Operation(summary = "Get dashboard statistics", description = "Returns today's revenue, profit, and expired stock loss")
     public ResponseEntity<DashboardStatsResponse> getStats() {
         LocalDate today = LocalDate.now();
         BigDecimal dailyRevenue = financeService.calculateDailyRevenue(today);
         BigDecimal dailyProfit = financeService.calculateDailyProfit(today);
+        BigDecimal dailyLoss = financeService.calculateExpiredLoss();
 
         DashboardStatsResponse response = DashboardStatsResponse.builder()
                 .dailyRevenue(dailyRevenue)
                 .dailyProfit(dailyProfit)
+                .dailyLoss(dailyLoss)
                 .build();
         return ResponseEntity.ok(response);
     }

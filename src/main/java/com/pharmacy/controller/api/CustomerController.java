@@ -1,4 +1,4 @@
-package com.pharmacy.rest;
+package com.pharmacy.controller.api;
 
 import com.pharmacy.dto.request.CustomerCreateRequest;
 import com.pharmacy.dto.response.CustomerResponse;
@@ -22,6 +22,15 @@ import java.util.stream.Collectors;
 public class CustomerController {
 
     private final CustomerService customerService;
+
+    @GetMapping("/search")
+    @Operation(summary = "Search customers", description = "Dynamic lookup by name or phone for POS checkout")
+    public ResponseEntity<List<CustomerResponse>> searchCustomers(@RequestParam String query) {
+        List<CustomerResponse> responses = customerService.search(query).stream()
+                .map(CustomerResponse::fromEntity)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(responses);
+    }
 
     @GetMapping
     @Operation(summary = "List active customers", description = "Returns all non-deleted customer accounts with current balances")

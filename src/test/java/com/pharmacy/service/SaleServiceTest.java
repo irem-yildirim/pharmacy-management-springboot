@@ -87,6 +87,7 @@ class SaleServiceTest {
     void testCreateSaleFIFO() {
         SaleItemRequest request = new SaleItemRequest("8690000000001", 6);
         when(drugRepository.findById("8690000000001")).thenReturn(Optional.of(sampleDrug));
+        when(purchaseRepository.sumRemainingByDrugBarcode("8690000000001")).thenReturn(24);
         when(purchaseRepository.findByDrug_BarcodeAndRemainingQuantityGreaterThanOrderByExpirationDateAsc(
                 "8690000000001", 0)).thenReturn(List.of(batchOld, batchNew));
         when(saleRepository.save(any(Sale.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -108,6 +109,7 @@ class SaleServiceTest {
     void testCreateSaleSingleBatch() {
         SaleItemRequest request = new SaleItemRequest("8690000000001", 3);
         when(drugRepository.findById("8690000000001")).thenReturn(Optional.of(sampleDrug));
+        when(purchaseRepository.sumRemainingByDrugBarcode("8690000000001")).thenReturn(24);
         when(purchaseRepository.findByDrug_BarcodeAndRemainingQuantityGreaterThanOrderByExpirationDateAsc(
                 "8690000000001", 0)).thenReturn(List.of(batchOld, batchNew));
         when(saleRepository.save(any(Sale.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -125,6 +127,7 @@ class SaleServiceTest {
     void testInsufficientStock() {
         SaleItemRequest request = new SaleItemRequest("8690000000001", 100);
         when(drugRepository.findById("8690000000001")).thenReturn(Optional.of(sampleDrug));
+        when(purchaseRepository.sumRemainingByDrugBarcode("8690000000001")).thenReturn(24);
         when(purchaseRepository.findByDrug_BarcodeAndRemainingQuantityGreaterThanOrderByExpirationDateAsc(
                 "8690000000001", 0)).thenReturn(List.of(batchOld, batchNew));
         when(userRepository.findById(1L)).thenReturn(Optional.of(sampleUser));
@@ -145,10 +148,10 @@ class SaleServiceTest {
 
     @Test
     void testPrescriptionRequired() {
-        PresType presType = PresType.builder().id(4L).name("Red").riskLevel(2).build();
+        PresType presType = PresType.builder().id(2L).name("White").riskLevel(1).build();
         Drug rxDrug = Drug.builder()
                 .barcode("8690000000002")
-                .name("Controlled Drug")
+                .name("White Prescription Drug")
                 .presType(presType)
                 .currentSellingPrice(new BigDecimal("100.00"))
                 .isActive(true)
@@ -156,6 +159,7 @@ class SaleServiceTest {
 
         SaleItemRequest request = new SaleItemRequest("8690000000002", 2);
         when(drugRepository.findById("8690000000002")).thenReturn(Optional.of(rxDrug));
+        when(purchaseRepository.sumRemainingByDrugBarcode("8690000000002")).thenReturn(20);
         when(userRepository.findById(1L)).thenReturn(Optional.of(sampleUser));
 
         assertThrows(PrescriptionRequiredException.class,
@@ -182,14 +186,23 @@ class SaleServiceTest {
                 .purchaseDate(LocalDate.now())
                 .build();
 
+        Customer customer = Customer.builder()
+                .id(1L)
+                .name("Test Customer")
+                .balance(BigDecimal.ZERO)
+                .isActive(true)
+                .build();
+
         SaleItemRequest request = new SaleItemRequest("8690000000002", 2);
         when(drugRepository.findById("8690000000002")).thenReturn(Optional.of(rxDrug));
+        when(purchaseRepository.sumRemainingByDrugBarcode("8690000000002")).thenReturn(10);
         when(purchaseRepository.findByDrug_BarcodeAndRemainingQuantityGreaterThanOrderByExpirationDateAsc(
                 "8690000000002", 0)).thenReturn(List.of(rxBatch));
         when(saleRepository.save(any(Sale.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
         when(userRepository.findById(1L)).thenReturn(Optional.of(sampleUser));
 
-        Sale sale = saleService.createSale(List.of(request), true, null, 1L);
+        Sale sale = saleService.createSale(List.of(request), true, 1L, 1L);
 
         assertNotNull(sale);
         assertTrue(sale.getIsPrescriptionLogged());
@@ -206,6 +219,7 @@ class SaleServiceTest {
 
         SaleItemRequest request = new SaleItemRequest("8690000000001", 1);
         when(drugRepository.findById("8690000000001")).thenReturn(Optional.of(sampleDrug));
+        when(purchaseRepository.sumRemainingByDrugBarcode("8690000000001")).thenReturn(4);
         when(purchaseRepository.findByDrug_BarcodeAndRemainingQuantityGreaterThanOrderByExpirationDateAsc(
                 "8690000000001", 0)).thenReturn(List.of(batchOld));
         when(saleRepository.save(any(Sale.class))).thenAnswer(inv -> inv.getArgument(0));

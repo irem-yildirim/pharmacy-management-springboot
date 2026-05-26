@@ -1,4 +1,4 @@
-package com.pharmacy.controller;
+package com.pharmacy.controller.ui;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.ControllerAdvice;

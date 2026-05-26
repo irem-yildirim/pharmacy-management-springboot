@@ -1,4 +1,4 @@
-package com.pharmacy.rest;
+package com.pharmacy.controller.api;
 
 import com.pharmacy.config.PharmacyUserDetails;
 import com.pharmacy.dto.request.SaleCreateRequest;

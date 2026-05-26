@@ -1,5 +1,6 @@
 package com.pharmacy.service;
 
+import com.pharmacy.repository.PurchaseRepository;
 import com.pharmacy.strategy.CriticalStrategy;
 import com.pharmacy.strategy.ExpiredStrategy;
 import com.pharmacy.strategy.OkStrategy;
@@ -8,13 +9,15 @@ import org.junit.jupiter.api.Test;
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.mock;
 
 class ExpiryServiceTest {
 
     private final ExpiryService expiryService = new ExpiryService(
             new ExpiredStrategy(),
             new CriticalStrategy(),
-            new OkStrategy()
+            new OkStrategy(),
+            mock(PurchaseRepository.class)
     );
 
     @Test

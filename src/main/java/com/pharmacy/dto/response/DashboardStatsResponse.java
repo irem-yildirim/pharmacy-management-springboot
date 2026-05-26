@@ -11,4 +11,5 @@ public class DashboardStatsResponse {
 
     private BigDecimal dailyRevenue;
     private BigDecimal dailyProfit;
+    private BigDecimal dailyLoss;
 }

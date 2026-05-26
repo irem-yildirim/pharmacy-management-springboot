@@ -1,4 +1,4 @@
-package com.pharmacy.rest;
+package com.pharmacy.controller.api;
 
 import com.pharmacy.dto.request.DrugCreateRequest;
 import com.pharmacy.dto.response.DrugResponse;
@@ -8,10 +8,13 @@ import com.pharmacy.model.Category;
 import com.pharmacy.model.Drug;
 import com.pharmacy.model.PresType;
 import com.pharmacy.service.DrugService;
+import com.pharmacy.service.ExpiryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -25,6 +28,7 @@ import org.springframework.web.bind.annotation.*;
 public class DrugController {
 
     private final DrugService drugService;
+    private final ExpiryService expiryService;
 
     @GetMapping
     @Operation(summary = "List all active drugs", description = "Returns all active drugs with total stock and active purchase batches")
@@ -78,6 +82,16 @@ public class DrugController {
     public ResponseEntity<Void> softDelete(@PathVariable String barcode) {
         drugService.softDelete(barcode);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{barcode}/dispose")
+    @Operation(summary = "Dispose expired batches for a drug", description = "Zeroes out remaining quantities for all expired batches and returns the financial loss")
+    public ResponseEntity<Map<String, Object>> disposeExpired(@PathVariable String barcode) {
+        BigDecimal loss = expiryService.disposeExpiredBatches(barcode);
+        return ResponseEntity.ok(Map.of(
+                "message", "Expired batches disposed",
+                "drugBarcode", barcode,
+                "loss", loss));
     }
 
     @PutMapping("/{barcode}")

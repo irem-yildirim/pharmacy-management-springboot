@@ -35,4 +35,9 @@ public class CustomerService {
                 .build();
         return customerRepository.save(customer);
     }
+
+    public List<Customer> search(String query) {
+        return customerRepository
+                .findByIsActiveTrueAndNameContainingIgnoreCaseOrIsActiveTrueAndPhoneContaining(query, query);
+    }
 }

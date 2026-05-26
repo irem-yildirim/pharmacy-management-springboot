@@ -1,5 +1,6 @@
 package com.pharmacy.service;
 
+import com.pharmacy.repository.PurchaseRepository;
 import com.pharmacy.repository.SaleItemRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,6 +23,9 @@ class FinanceServiceTest {
     @Mock
     private SaleItemRepository saleItemRepository;
 
+    @Mock
+    private PurchaseRepository purchaseRepository;
+
     @InjectMocks
     private FinanceService financeService;
 
@@ -30,6 +34,7 @@ class FinanceServiceTest {
     @BeforeEach
     void setUp() {
         today = LocalDate.now();
+        lenient().when(purchaseRepository.calculateExpiredLoss()).thenReturn(BigDecimal.ZERO);
     }
 
     @Test

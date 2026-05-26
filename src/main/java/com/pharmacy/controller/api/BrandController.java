@@ -1,4 +1,4 @@
-package com.pharmacy.rest;
+package com.pharmacy.controller.api;
 
 import com.pharmacy.dto.response.BrandResponse;
 import com.pharmacy.model.Brand;
