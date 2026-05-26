@@ -5,6 +5,7 @@ C:\Users\iremy\Desktop\Java Final Projesi\src\main\java\com\pharmacy\advice\Glob
 C:\Users\iremy\Desktop\Java Final Projesi\src\main\java\com\pharmacy\advice\InsufficientStockException.java
 C:\Users\iremy\Desktop\Java Final Projesi\src\main\java\com\pharmacy\advice\PrescriptionRequiredException.java
 C:\Users\iremy\Desktop\Java Final Projesi\src\main\java\com\pharmacy\advice\RestrictedSaleException.java
+C:\Users\iremy\Desktop\Java Final Projesi\src\main\java\com\pharmacy\config\DataInitializer.java
 C:\Users\iremy\Desktop\Java Final Projesi\src\main\java\com\pharmacy\config\PharmacyUserDetails.java
 C:\Users\iremy\Desktop\Java Final Projesi\src\main\java\com\pharmacy\config\SecurityConfig.java
 C:\Users\iremy\Desktop\Java Final Projesi\src\main\java\com\pharmacy\config\WebConfig.java

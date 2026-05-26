@@ -106,18 +106,6 @@
                             <span class="text-2xl font-black text-indigo-600" id="summary-total">$0.00</span>
                         </div>
                     </div>
-                    <div class="p-4 bg-slate-50 rounded-2xl space-y-3 border border-slate-150">
-                        <div class="flex items-center justify-between">
-                            <div class="pr-2">
-                                <h5 class="text-sm font-bold text-slate-900 leading-tight">Prescription Logged</h5>
-                                <p class="text-[10px] text-slate-400 mt-0.5 leading-normal">Required for White, Green, and Red prescription drugs.</p>
-                            </div>
-                            <label class="relative inline-flex items-center cursor-pointer shrink-0">
-                                <input type="checkbox" id="prescription-logged" class="sr-only peer" />
-                                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                            </label>
-                        </div>
-                    </div>
                     <button id="btn-complete-sale" onclick="completeSale()" class="w-full py-4 px-6 bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98] text-white font-bold text-base rounded-2xl shadow-lg shadow-indigo-100 hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 group">
                         <svg class="w-5 h-5 text-indigo-200 transition-transform group-hover:scale-115" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -168,7 +156,7 @@
                             name: drug.name,
                             category: drug.categoryName || 'General',
                             brand: drug.brandName || 'Generic',
-                            prescriptionType: drug.presTypeName || 'Normal',
+                            prescriptionType: drug.presTypeName || 'White',
                             price: parseFloat(drug.currentSellingPrice || 0),
                             quantity: 1
                         });
@@ -201,7 +189,6 @@
             function clearCart() {
                 if (cart.length === 0) return;
                 cart = [];
-                document.getElementById('prescription-logged').checked = false;
                 showToast('Cart cleared', 'success');
                 renderCart();
             }
@@ -226,9 +213,11 @@
                     cart.forEach(item => {
                         const lineTotal = item.price * item.quantity;
                         let rxBadge = '';
-                        if (item.prescriptionType.includes('Kirmizi')) rxBadge = '<span class="px-2 py-0.5 rounded bg-rose-50 text-[10px] text-rose-700 font-bold border border-rose-150 ml-2">Red Rx</span>';
-                        else if (item.prescriptionType.includes('Yesil')) rxBadge = '<span class="px-2 py-0.5 rounded bg-emerald-50 text-[10px] text-emerald-700 font-bold border border-emerald-150 ml-2">Green Rx</span>';
-                        else if (item.prescriptionType.includes('Beyaz')) rxBadge = '<span class="px-2 py-0.5 rounded bg-blue-50 text-[10px] text-blue-700 font-bold border border-blue-150 ml-2">White Rx</span>';
+                        if (item.prescriptionType === 'Red' || item.prescriptionType.includes('Red')) rxBadge = '<span class="px-2 py-0.5 rounded bg-rose-50 text-[10px] text-rose-700 font-bold border border-rose-150 ml-2">Red Rx</span>';
+                        else if (item.prescriptionType === 'Green' || item.prescriptionType.includes('Green')) rxBadge = '<span class="px-2 py-0.5 rounded bg-emerald-50 text-[10px] text-emerald-700 font-bold border border-emerald-150 ml-2">Green Rx</span>';
+                        else if (item.prescriptionType === 'White' || item.prescriptionType.includes('White')) rxBadge = '<span class="px-2 py-0.5 rounded bg-blue-50 text-[10px] text-blue-700 font-bold border border-blue-150 ml-2">White Rx</span>';
+                        else if (item.prescriptionType === 'Purple' || item.prescriptionType.includes('Purple')) rxBadge = '<span class="px-2 py-0.5 rounded bg-violet-50 text-[10px] text-violet-700 font-bold border border-violet-150 ml-2">Purple Rx</span>';
+                        else if (item.prescriptionType === 'Orange' || item.prescriptionType.includes('Orange')) rxBadge = '<span class="px-2 py-0.5 rounded bg-orange-50 text-[10px] text-orange-700 font-bold border border-orange-150 ml-2">Orange Rx</span>';
 
                         html += `
                             <tr class="hover:bg-slate-50/50 transition">
@@ -294,9 +283,6 @@
                 if (msg.includes('restricted drug') && msg.includes('guest')) {
                     return 'This is a restricted drug. A registered customer is required. Guest checkout blocked.';
                 }
-                if (msg.includes('prescription required')) {
-                    return 'A valid prescription is required for this drug. Please enable prescription mode.';
-                }
                 return rawMessage;
             }
 
@@ -307,7 +293,6 @@
                 }
 
                 const btn = document.getElementById('btn-complete-sale');
-                const isPrescription = document.getElementById('prescription-logged').checked;
 
                 btn.disabled = true;
                 const originalBtnContent = btn.innerHTML;
@@ -324,7 +309,7 @@
                         barcode: item.barcode,
                         quantity: parseInt(item.quantity)
                     })),
-                    prescriptionLogged: isPrescription
+                    prescriptionLogged: false
                 };
 
                 try {
@@ -338,7 +323,6 @@
                         const savedSale = await response.json();
                         showToast('Sale completed successfully! Receipt ID: #' + (savedSale.id || ''), 'success');
                         cart = [];
-                        document.getElementById('prescription-logged').checked = false;
                         renderCart();
                         document.getElementById('barcode-input').focus();
                     } else {

@@ -73,6 +73,7 @@ com\pharmacy\controller\ui\UIController.class
 com\pharmacy\model\Category$CategoryBuilder.class
 com\pharmacy\model\Purchase.class
 com\pharmacy\dto\response\CustomerResponse.class
+com\pharmacy\config\DataInitializer.class
 com\pharmacy\controller\ui\GlobalUIControllerAdvice.class
 com\pharmacy\dto\response\SaleResponse.class
 com\pharmacy\model\Brand.class

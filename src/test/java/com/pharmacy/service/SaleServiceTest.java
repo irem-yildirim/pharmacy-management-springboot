@@ -3,7 +3,7 @@ package com.pharmacy.service;
 import com.pharmacy.model.*;
 import com.pharmacy.advice.DrugNotFoundException;
 import com.pharmacy.advice.InsufficientStockException;
-import com.pharmacy.advice.PrescriptionRequiredException;
+import com.pharmacy.advice.RestrictedSaleException;
 import com.pharmacy.repository.*;
 import com.pharmacy.dto.request.SaleItemRequest;
 import org.junit.jupiter.api.BeforeEach;
@@ -147,7 +147,7 @@ class SaleServiceTest {
     }
 
     @Test
-    void testPrescriptionRequired() {
+    void testWhiteDrugAllowedForWalkIn() {
         PresType presType = PresType.builder().id(2L).name("White").riskLevel(1).build();
         Drug rxDrug = Drug.builder()
                 .barcode("8690000000002")
@@ -157,17 +157,32 @@ class SaleServiceTest {
                 .isActive(true)
                 .build();
 
+        Purchase rxBatch = Purchase.builder()
+                .id(10L)
+                .drug(rxDrug)
+                .originalQuantity(20)
+                .remainingQuantity(10)
+                .purchasePrice(new BigDecimal("70.00"))
+                .expirationDate(LocalDate.now().plusDays(60))
+                .purchaseDate(LocalDate.now())
+                .build();
+
         SaleItemRequest request = new SaleItemRequest("8690000000002", 2);
         when(drugRepository.findById("8690000000002")).thenReturn(Optional.of(rxDrug));
-        when(purchaseRepository.sumRemainingByDrugBarcode("8690000000002")).thenReturn(20);
+        when(purchaseRepository.sumRemainingByDrugBarcode("8690000000002")).thenReturn(10);
+        when(purchaseRepository.findByDrug_BarcodeAndRemainingQuantityGreaterThanOrderByExpirationDateAsc(
+                "8690000000002", 0)).thenReturn(List.of(rxBatch));
+        when(saleRepository.save(any(Sale.class))).thenAnswer(inv -> inv.getArgument(0));
         when(userRepository.findById(1L)).thenReturn(Optional.of(sampleUser));
 
-        assertThrows(PrescriptionRequiredException.class,
-                () -> saleService.createSale(List.of(request), false, null, 1L));
+        Sale sale = saleService.createSale(List.of(request), false, null, 1L);
+
+        assertNotNull(sale);
+        assertEquals(new BigDecimal("200.00"), sale.getTotalAmount());
     }
 
     @Test
-    void testPrescriptionLoggedAllowsRxDrug() {
+    void testControlledDrugRequiresCustomer() {
         PresType presType = PresType.builder().id(4L).name("Red").riskLevel(2).build();
         Drug rxDrug = Drug.builder()
                 .barcode("8690000000002")
@@ -205,7 +220,27 @@ class SaleServiceTest {
         Sale sale = saleService.createSale(List.of(request), true, 1L, 1L);
 
         assertNotNull(sale);
-        assertTrue(sale.getIsPrescriptionLogged());
+        assertEquals(new BigDecimal("200.00"), sale.getTotalAmount());
+    }
+
+    @Test
+    void testControlledDrugBlockedForWalkIn() {
+        PresType presType = PresType.builder().id(4L).name("Red").riskLevel(2).build();
+        Drug rxDrug = Drug.builder()
+                .barcode("8690000000002")
+                .name("Controlled Drug")
+                .presType(presType)
+                .currentSellingPrice(new BigDecimal("100.00"))
+                .isActive(true)
+                .build();
+
+        SaleItemRequest request = new SaleItemRequest("8690000000002", 2);
+        when(drugRepository.findById("8690000000002")).thenReturn(Optional.of(rxDrug));
+        when(purchaseRepository.sumRemainingByDrugBarcode("8690000000002")).thenReturn(10);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(sampleUser));
+
+        assertThrows(RestrictedSaleException.class,
+                () -> saleService.createSale(List.of(request), false, null, 1L));
     }
 
     @Test

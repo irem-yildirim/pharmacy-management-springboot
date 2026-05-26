@@ -55,19 +55,19 @@
 
 ---
 
-### 2.3 PresType (Reçete Tipi — Meta Veri)
+### 2.3 PresType (Prescription Type — Meta Data)
 
-İlacın reçete sınıfını tanımlar. Satış akışını doğrudan etkiler.
+Defines the drug's prescription classification. Directly affects sale flow validation.
 
-| Alan        | Java Tipi   | DB Tipi         | Kısıtlar                     | Açıklama                              |
-|-------------|-------------|-----------------|-------------------------------|---------------------------------------|
-| `id`        | `Long`      | `BIGINT`        | `@Id`, `@GeneratedValue(AUTO)` | Primary Key                           |
-| `name`      | `String`    | `VARCHAR(50)`   | `@NotBlank`                   | Reçete adı: `Normal`, `Kırmızı`, `Yeşil` |
-| `riskLevel` | `Integer`   | `INT`           | `@Min(0)`                     | Risk seviyesi (0=Normal, 1=Kırmızı, 2=Yeşil) |
+| Alan        | Java Tipi   | DB Tipi         | Kısıtlar                     | Açıklama                                    |
+|-------------|-------------|-----------------|-------------------------------|----------------------------------------------|
+| `id`        | `Long`      | `BIGINT`        | `@Id`, `@GeneratedValue(AUTO)` | Primary Key                                  |
+| `name`      | `String`    | `VARCHAR(50)`   | `@NotBlank`                   | Name: `White`, `Orange`, `Purple`, `Green`, `Red` |
+| `riskLevel` | `Integer`   | `INT`           | `@Min(1)`                     | Risk level (1=White, 2=Orange/Purple, 3=Green, 4=Red) |
 
 **İlişkiler:** `PresType` ← `Drug` (OneToMany, mappedBy)
 
-> **İŞ KURALI:** `riskLevel >= 1` olan ilaçların satışında reçete/hasta bilgisi **zorunludur**.
+> **İŞ KURALI:** `riskLevel >= 1` olan tüm ilaçlar reçeteye tabidir. `riskLevel > 1` olan ilaçlar için kayıtlı müşteri **zorunludur**.
 
 ---
 

@@ -147,21 +147,6 @@
                         </div>
                     </div>
 
-                    <!-- Prescription Verification Switch -->
-                    <div class="p-4 bg-slate-50 rounded-2xl space-y-3 border border-slate-150">
-                        <div class="flex items-center justify-between">
-                            <div class="pr-2">
-                                <h5 class="text-xs font-bold text-slate-900 leading-tight">Prescription Logged</h5>
-                                <p class="text-[9px] text-slate-400 mt-0.5 leading-normal">Required for White, Green, and Red prescription drugs.</p>
-                            </div>
-                            
-                            <label class="relative inline-flex items-center cursor-pointer shrink-0">
-                                <input type="checkbox" id="prescription-logged" class="sr-only peer" />
-                                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                            </label>
-                        </div>
-                    </div>
-
                     <!-- Complete Checkout Action Button -->
                     <button id="btn-complete-sale" onclick="completeSale()" class="w-full py-4 px-6 bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98] text-white font-bold text-base rounded-2xl shadow-lg shadow-indigo-100 hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 group">
                         <svg class="w-5 h-5 text-indigo-200 transition-transform group-hover:scale-115" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -386,7 +371,7 @@
                             name: drug.name,
                             category: drug.categoryName || 'General',
                             brand: drug.brandName || 'Generic',
-                            prescriptionType: drug.presTypeName || 'Normal',
+                            prescriptionType: drug.presTypeName || 'White',
                             price: parseFloat(drug.currentSellingPrice || 0.00),
                             quantity: 1,
                             maxStock: totalStock
@@ -435,7 +420,6 @@
             function clearCart() {
                 if (cart.length === 0) return;
                 cart = [];
-                document.getElementById('prescription-logged').checked = false;
                 document.getElementById('customer-select').value = '';
                 showToast('Cart cleared', 'success');
                 renderCart();
@@ -470,6 +454,10 @@
                             rxBadge = `<span class="px-2 py-0.5 rounded bg-emerald-50 text-[10px] text-emerald-700 font-bold border border-emerald-200 ml-2">Green Rx</span>`;
                         } else if (pt === 'White' || pt.includes('White')) {
                             rxBadge = `<span class="px-2 py-0.5 rounded bg-blue-50 text-[10px] text-blue-700 font-bold border border-blue-200 ml-2">White Rx</span>`;
+                        } else if (pt === 'Purple' || pt.includes('Purple')) {
+                            rxBadge = `<span class="px-2 py-0.5 rounded bg-violet-50 text-[10px] text-violet-700 font-bold border border-violet-200 ml-2">Purple Rx</span>`;
+                        } else if (pt === 'Orange' || pt.includes('Orange')) {
+                            rxBadge = `<span class="px-2 py-0.5 rounded bg-orange-50 text-[10px] text-orange-700 font-bold border border-orange-200 ml-2">Orange Rx</span>`;
                         }
 
                         html += `
@@ -536,16 +524,16 @@
                 // CHECKOUT BLOCK: If any drug in cart is Red or Green, Complete Sale is BLOCKED until a customer is selected.
                 const hasControlledDrug = cart.some(item => {
                     const type = item.prescriptionType || '';
-                    return type === 'Red' || type === 'Green' || type.includes('Red') || type.includes('Green');
+                    return type === 'Red' || type === 'Green' || type === 'Purple' || type === 'Orange'
+                        || type.includes('Red') || type.includes('Green') || type.includes('Purple') || type.includes('Orange');
                 });
 
                 if (hasControlledDrug && !customerId) {
-                    showToast('Customer selection is REQUIRED for controlled Red or Green prescription drugs!', 'error');
+                    showToast('Customer selection is REQUIRED for controlled prescription drugs (Green, Red, Purple, Orange)!', 'error');
                     return;
                 }
 
                 const btn = document.getElementById('btn-complete-sale');
-                const isPrescription = document.getElementById('prescription-logged').checked;
                 
                 btn.disabled = true;
                 const originalBtnContent = btn.innerHTML;
@@ -562,7 +550,7 @@
                         barcode: item.barcode,
                         quantity: parseInt(item.quantity)
                     })),
-                    prescriptionLogged: isPrescription,
+                    prescriptionLogged: false,
                     customerId: customerId ? parseInt(customerId) : null
                 };
 
@@ -580,7 +568,6 @@
                         showToast(`Sale completed successfully! Receipt ID: #${savedSale.id || ''}`, 'success');
                         
                         cart = [];
-                        document.getElementById('prescription-logged').checked = false;
                         document.getElementById('customer-select').value = '';
                         renderCart();
                         

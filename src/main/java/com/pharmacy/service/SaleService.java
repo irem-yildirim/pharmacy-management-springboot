@@ -7,7 +7,6 @@ import com.pharmacy.model.Sale;
 import com.pharmacy.model.SaleItem;
 import com.pharmacy.advice.DrugNotFoundException;
 import com.pharmacy.advice.InsufficientStockException;
-import com.pharmacy.advice.PrescriptionRequiredException;
 import com.pharmacy.advice.RestrictedSaleException;
 import com.pharmacy.repository.DrugRepository;
 import com.pharmacy.repository.PurchaseRepository;
@@ -68,14 +67,6 @@ public class SaleService {
                     && customerId == null) {
                 throw new RestrictedSaleException(
                         "Restricted drug '" + drug.getName() + "' requires a registered customer. Guest checkout is not allowed.");
-            }
-
-            if (drug.getPresType() != null
-                    && drug.getPresType().getRiskLevel() != null
-                    && drug.getPresType().getRiskLevel() >= 1
-                    && !prescriptionLogged) {
-                throw new PrescriptionRequiredException(
-                        "Prescription required for drug: " + drug.getName());
             }
 
             List<SaleItem> deductedItems = deductFromBatches(drug, request.getQuantity(), sale);

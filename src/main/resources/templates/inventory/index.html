@@ -152,8 +152,10 @@
                     rxBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-emerald-50 text-emerald-700 font-bold border border-emerald-200">Green Rx</span>`;
                 } else if (presName === 'White' || presName.includes('White')) {
                     rxBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-blue-50 text-blue-700 font-bold border border-blue-200">White Rx</span>`;
-                } else if (presName === 'Normal' || presName.includes('Normal')) {
-                    rxBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-slate-50 text-slate-600 font-bold border border-slate-200">Normal</span>`;
+                } else if (presName === 'Purple' || presName.includes('Purple')) {
+                    rxBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-violet-50 text-violet-700 font-bold border border-violet-200">Purple Rx</span>`;
+                } else if (presName === 'Orange' || presName.includes('Orange')) {
+                    rxBadge = `<span class="px-2 py-0.5 rounded text-[10px] bg-orange-50 text-orange-700 font-bold border border-orange-200">Orange Rx</span>`;
                 }
 
                 const totalStock = drug.totalStock !== null && drug.totalStock !== undefined ? drug.totalStock : 0;
