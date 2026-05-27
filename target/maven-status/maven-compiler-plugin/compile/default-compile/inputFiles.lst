@@ -7,7 +7,6 @@ C:\Users\iremy\Desktop\Java Final Projesi\src\main\java\com\pharmacy\advice\Rest
 C:\Users\iremy\Desktop\Java Final Projesi\src\main\java\com\pharmacy\config\DataInitializer.java
 C:\Users\iremy\Desktop\Java Final Projesi\src\main\java\com\pharmacy\config\PharmacyUserDetails.java
 C:\Users\iremy\Desktop\Java Final Projesi\src\main\java\com\pharmacy\config\SecurityConfig.java
-C:\Users\iremy\Desktop\Java Final Projesi\src\main\java\com\pharmacy\config\WebConfig.java
 C:\Users\iremy\Desktop\Java Final Projesi\src\main\java\com\pharmacy\controller\api\BrandController.java
 C:\Users\iremy\Desktop\Java Final Projesi\src\main\java\com\pharmacy\controller\api\CategoryController.java
 C:\Users\iremy\Desktop\Java Final Projesi\src\main\java\com\pharmacy\controller\api\CustomerController.java
@@ -18,8 +17,11 @@ C:\Users\iremy\Desktop\Java Final Projesi\src\main\java\com\pharmacy\controller\
 C:\Users\iremy\Desktop\Java Final Projesi\src\main\java\com\pharmacy\controller\api\UserController.java
 C:\Users\iremy\Desktop\Java Final Projesi\src\main\java\com\pharmacy\controller\ui\GlobalUIControllerAdvice.java
 C:\Users\iremy\Desktop\Java Final Projesi\src\main\java\com\pharmacy\controller\ui\UIController.java
+C:\Users\iremy\Desktop\Java Final Projesi\src\main\java\com\pharmacy\dto\request\BrandCreateRequest.java
+C:\Users\iremy\Desktop\Java Final Projesi\src\main\java\com\pharmacy\dto\request\CategoryCreateRequest.java
 C:\Users\iremy\Desktop\Java Final Projesi\src\main\java\com\pharmacy\dto\request\CustomerCreateRequest.java
 C:\Users\iremy\Desktop\Java Final Projesi\src\main\java\com\pharmacy\dto\request\DrugCreateRequest.java
+C:\Users\iremy\Desktop\Java Final Projesi\src\main\java\com\pharmacy\dto\request\PurchaseBatchRequest.java
 C:\Users\iremy\Desktop\Java Final Projesi\src\main\java\com\pharmacy\dto\request\SaleCreateRequest.java
 C:\Users\iremy\Desktop\Java Final Projesi\src\main\java\com\pharmacy\dto\request\SaleItemRequest.java
 C:\Users\iremy\Desktop\Java Final Projesi\src\main\java\com\pharmacy\dto\request\UserCreateRequest.java

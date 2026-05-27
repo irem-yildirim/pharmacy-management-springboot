@@ -16,9 +16,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 // ACİL DURUM VERİ SEEDER'I
-// Sunum anında veya lokal testlerde veritabanı tamamen sıfırlanırsa,
-// aşağıdaki '// @Component' satırının başındaki yorum satırını kaldırarak
-// sistemi saniyeler içinde zengin sunum verileriyle doldurabilirsiniz.
 // @Component
 @Order(1)
 @RequiredArgsConstructor
@@ -100,7 +97,8 @@ public class DataInitializer implements ApplicationRunner {
     }
 
     private void seedPrescriptionTypes() {
-        if (presTypeRepository.count() > 0) return;
+        if (presTypeRepository.count() > 0)
+            return;
 
         presTypeRepository.save(PresType.builder().name("White").riskLevel(1).build());
         presTypeRepository.save(PresType.builder().name("Orange").riskLevel(2).build());
@@ -110,7 +108,8 @@ public class DataInitializer implements ApplicationRunner {
     }
 
     private void seedBrands() {
-        if (brandRepository.count() > 0) return;
+        if (brandRepository.count() > 0)
+            return;
 
         brandRepository.save(Brand.builder().name("Pfizer").isActive(true).build());
         brandRepository.save(Brand.builder().name("Novartis").isActive(true).build());
@@ -120,7 +119,8 @@ public class DataInitializer implements ApplicationRunner {
     }
 
     private void seedCategories() {
-        if (categoryRepository.count() > 0) return;
+        if (categoryRepository.count() > 0)
+            return;
 
         categoryRepository.save(Category.builder().name("Antibiyotikler").isActive(true).build());
         categoryRepository.save(Category.builder().name("Ağrı Kesiciler").isActive(true).build());
@@ -131,7 +131,8 @@ public class DataInitializer implements ApplicationRunner {
     }
 
     private void seedDrugsAndBatches() {
-        if (drugRepository.count() > 0) return;
+        if (drugRepository.count() > 0)
+            return;
 
         List<Brand> brands = brandRepository.findAll();
         List<Category> categories = categoryRepository.findAll();
@@ -156,27 +157,43 @@ public class DataInitializer implements ApplicationRunner {
         Category gastro = findCat(categories, "Gastrointestinal");
         Category psych = findCat(categories, "Psikiyatrik İlaçlar");
 
-        Drug drug1 = createDrugAndBatches("8699514010686", "Parol 500 mg Tablet", painkillers, abdi, white, new BigDecimal("45.50"), 100);
-        Drug drug2 = createDrugAndBatches("8699504090564", "Augmentin 1000 mg BID", antibiotics, bayer, white, new BigDecimal("125.00"), 30);
-        Drug drug3 = createDrugAndBatches("8699532040034", "Xanax 0.5 mg Tablet", psych, pfizer, green, new BigDecimal("85.50"), 15);
-        Drug drug4 = createDrugAndBatches("8699593090044", "Concerta 36 mg Tablet", psych, novartis, red, new BigDecimal("420.00"), 10);
-        Drug drug5 = createDrugAndBatches("8699809090038", "Pharmaton Vitality 30 Kapsül", painkillers, sanofi, white, new BigDecimal("350.00"), 20);
-        Drug drug6 = createDrugAndBatches("8699508090409", "Beloc Zok 50 mg Tablet", cardio, novartis, white, new BigDecimal("95.25"), 40);
-        Drug drug7 = createDrugAndBatches("8699522010045", "Zinnat 500 mg Tablet", antibiotics, bayer, orange, new BigDecimal("210.00"), 20);
-        Drug drug8 = createDrugAndBatches("8699544010072", "Lipitor 20 mg Tablet", cardio, pfizer, white, new BigDecimal("175.50"), 50);
-        Drug drug9 = createDrugAndBatches("8699566010098", "Nexium 40 mg Tablet", gastro, sanofi, white, new BigDecimal("290.00"), 15);
-        Drug drug10 = createDrugAndBatches("8699588010124", "Ritalin 10 mg Tablet", psych, novartis, red, new BigDecimal("380.00"), 12);
-        Drug drug11 = createDrugAndBatches("8699610010155", "Tamiflu 75 mg Kapsül", antivirals, pfizer, green, new BigDecimal("520.00"), 8);
-        Drug drug12 = createDrugAndBatches("8699632010186", "Voltaren 50 mg Tablet", painkillers, novartis, white, new BigDecimal("65.00"), 60);
-        Drug drug13 = createDrugAndBatches("8699654010216", "Cipro 500 mg Tablet", antibiotics, bayer, white, new BigDecimal("185.00"), 25);
-        Drug drug14 = createDrugAndBatches("8699676010247", "Risperdal 2 mg Tablet", psych, pfizer, purple, new BigDecimal("450.00"), 10);
-        Drug drug15 = createDrugAndBatches("8699698010278", "Gaviscon Advance Likit", gastro, abdi, white, new BigDecimal("78.90"), 35);
+        Drug drug1 = createDrugAndBatches("8699514010686", "Parol 500 mg Tablet", painkillers, abdi, white,
+                new BigDecimal("45.50"), 100);
+        Drug drug2 = createDrugAndBatches("8699504090564", "Augmentin 1000 mg BID", antibiotics, bayer, white,
+                new BigDecimal("125.00"), 30);
+        Drug drug3 = createDrugAndBatches("8699532040034", "Xanax 0.5 mg Tablet", psych, pfizer, green,
+                new BigDecimal("85.50"), 15);
+        Drug drug4 = createDrugAndBatches("8699593090044", "Concerta 36 mg Tablet", psych, novartis, red,
+                new BigDecimal("420.00"), 10);
+        Drug drug5 = createDrugAndBatches("8699809090038", "Pharmaton Vitality 30 Kapsül", painkillers, sanofi, white,
+                new BigDecimal("350.00"), 20);
+        Drug drug6 = createDrugAndBatches("8699508090409", "Beloc Zok 50 mg Tablet", cardio, novartis, white,
+                new BigDecimal("95.25"), 40);
+        Drug drug7 = createDrugAndBatches("8699522010045", "Zinnat 500 mg Tablet", antibiotics, bayer, orange,
+                new BigDecimal("210.00"), 20);
+        Drug drug8 = createDrugAndBatches("8699544010072", "Lipitor 20 mg Tablet", cardio, pfizer, white,
+                new BigDecimal("175.50"), 50);
+        Drug drug9 = createDrugAndBatches("8699566010098", "Nexium 40 mg Tablet", gastro, sanofi, white,
+                new BigDecimal("290.00"), 15);
+        Drug drug10 = createDrugAndBatches("8699588010124", "Ritalin 10 mg Tablet", psych, novartis, red,
+                new BigDecimal("380.00"), 12);
+        Drug drug11 = createDrugAndBatches("8699610010155", "Tamiflu 75 mg Kapsül", antivirals, pfizer, green,
+                new BigDecimal("520.00"), 8);
+        Drug drug12 = createDrugAndBatches("8699632010186", "Voltaren 50 mg Tablet", painkillers, novartis, white,
+                new BigDecimal("65.00"), 60);
+        Drug drug13 = createDrugAndBatches("8699654010216", "Cipro 500 mg Tablet", antibiotics, bayer, white,
+                new BigDecimal("185.00"), 25);
+        Drug drug14 = createDrugAndBatches("8699676010247", "Risperdal 2 mg Tablet", psych, pfizer, purple,
+                new BigDecimal("450.00"), 10);
+        Drug drug15 = createDrugAndBatches("8699698010278", "Gaviscon Advance Likit", gastro, abdi, white,
+                new BigDecimal("78.90"), 35);
 
-        drugRepository.saveAll(List.of(drug1, drug2, drug3, drug4, drug5, drug6, drug7, drug8, drug9, drug10, drug11, drug12, drug13, drug14, drug15));
+        drugRepository.saveAll(List.of(drug1, drug2, drug3, drug4, drug5, drug6, drug7, drug8, drug9, drug10, drug11,
+                drug12, drug13, drug14, drug15));
     }
 
     private Drug createDrugAndBatches(String barcode, String name, Category category, Brand brand, PresType presType,
-                                       BigDecimal sellingPrice, int minStockAlert) {
+            BigDecimal sellingPrice, int minStockAlert) {
         Drug drug = Drug.builder()
                 .barcode(barcode)
                 .name(name)
@@ -228,30 +245,43 @@ public class DataInitializer implements ApplicationRunner {
     }
 
     private void seedCustomers() {
-        if (customerRepository.count() > 0) return;
+        if (customerRepository.count() > 0)
+            return;
 
-        customerRepository.save(Customer.builder().name("Ahmet Yılmaz").phone("5551234567").balance(new BigDecimal("1250.50")).isActive(true).build());
-        customerRepository.save(Customer.builder().name("Ayşe Demir").phone("5557654321").balance(new BigDecimal("340.00")).isActive(true).build());
-        customerRepository.save(Customer.builder().name("Mehmet Kaya").phone("5559876543").balance(new BigDecimal("2780.75")).isActive(true).build());
-        customerRepository.save(Customer.builder().name("Fatma Şahin").phone("5553456789").balance(new BigDecimal("520.25")).isActive(true).build());
-        customerRepository.save(Customer.builder().name("Ali Özdemir").phone("5551122334").balance(new BigDecimal("890.00")).isActive(true).build());
+        customerRepository.save(Customer.builder().name("Ahmet Yılmaz").phone("5551234567")
+                .balance(new BigDecimal("1250.50")).isActive(true).build());
+        customerRepository.save(Customer.builder().name("Ayşe Demir").phone("5557654321")
+                .balance(new BigDecimal("340.00")).isActive(true).build());
+        customerRepository.save(Customer.builder().name("Mehmet Kaya").phone("5559876543")
+                .balance(new BigDecimal("2780.75")).isActive(true).build());
+        customerRepository.save(Customer.builder().name("Fatma Şahin").phone("5553456789")
+                .balance(new BigDecimal("520.25")).isActive(true).build());
+        customerRepository.save(Customer.builder().name("Ali Özdemir").phone("5551122334")
+                .balance(new BigDecimal("890.00")).isActive(true).build());
     }
 
     private void seedSalesHistory() {
-        if (saleRepository.count() > 0) return;
+        if (saleRepository.count() > 0)
+            return;
 
         List<User> users = userRepository.findAll();
         List<Customer> customers = customerRepository.findAll();
         List<Purchase> purchases = purchaseRepository.findAll();
 
-        User cashier1 = users.stream().filter(u -> "kasiyer_veli".equals(u.getUsername())).findFirst().orElse(users.get(0));
-        User cashier2 = users.stream().filter(u -> "kasiyer_zeynep".equals(u.getUsername())).findFirst().orElse(users.get(0));
+        User cashier1 = users.stream().filter(u -> "kasiyer_veli".equals(u.getUsername())).findFirst()
+                .orElse(users.get(0));
+        User cashier2 = users.stream().filter(u -> "kasiyer_zeynep".equals(u.getUsername())).findFirst()
+                .orElse(users.get(0));
         User pharm = users.stream().filter(u -> "eczaci_ayse".equals(u.getUsername())).findFirst().orElse(users.get(0));
 
-        Customer ahmet = customers.stream().filter(c -> c.getName().contains("Ahmet")).findFirst().orElse(customers.get(0));
-        Customer ayse = customers.stream().filter(c -> c.getName().contains("Ayşe")).findFirst().orElse(customers.get(0));
-        Customer mehmet = customers.stream().filter(c -> c.getName().contains("Mehmet")).findFirst().orElse(customers.get(0));
-        Customer fatma = customers.stream().filter(c -> c.getName().contains("Fatma")).findFirst().orElse(customers.get(0));
+        Customer ahmet = customers.stream().filter(c -> c.getName().contains("Ahmet")).findFirst()
+                .orElse(customers.get(0));
+        Customer ayse = customers.stream().filter(c -> c.getName().contains("Ayşe")).findFirst()
+                .orElse(customers.get(0));
+        Customer mehmet = customers.stream().filter(c -> c.getName().contains("Mehmet")).findFirst()
+                .orElse(customers.get(0));
+        Customer fatma = customers.stream().filter(c -> c.getName().contains("Fatma")).findFirst()
+                .orElse(customers.get(0));
         Customer ali = customers.stream().filter(c -> c.getName().contains("Ali")).findFirst().orElse(customers.get(0));
 
         createSale(cashier1, ahmet, true, LocalDateTime.now().minusDays(5), purchases, 0, 3, 1);
@@ -265,7 +295,7 @@ public class DataInitializer implements ApplicationRunner {
     }
 
     private void createSale(User user, Customer customer, boolean prescriptionLogged, LocalDateTime date,
-                            List<Purchase> allPurchases, int purchaseStartIdx, int itemCount, int qtyEach) {
+            List<Purchase> allPurchases, int purchaseStartIdx, int itemCount, int qtyEach) {
         Sale sale = Sale.builder()
                 .customer(customer)
                 .user(user)
@@ -279,7 +309,8 @@ public class DataInitializer implements ApplicationRunner {
         for (int i = 0; i < itemCount && (purchaseStartIdx + i) < allPurchases.size(); i++) {
             Purchase batch = allPurchases.get(purchaseStartIdx + i);
             int qty = Math.min(qtyEach, batch.getRemainingQuantity());
-            if (qty <= 0) continue;
+            if (qty <= 0)
+                continue;
 
             batch.setRemainingQuantity(batch.getRemainingQuantity() - qty);
             purchaseRepository.save(batch);

@@ -3,8 +3,6 @@ package com.pharmacy.controller.api;
 import com.pharmacy.config.PharmacyUserDetails;
 import com.pharmacy.dto.request.UserCreateRequest;
 import com.pharmacy.dto.response.UserResponse;
-import com.pharmacy.model.Role;
-import com.pharmacy.model.User;
 import com.pharmacy.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -41,14 +39,8 @@ public class UserController {
         if (userService.usernameExists(request.getUsername())) {
             return ResponseEntity.badRequest().build();
         }
-        User user = User.builder()
-                .name(request.getName())
-                .username(request.getUsername())
-                .password(request.getPassword())
-                .role(Role.valueOf(request.getRole()))
-                .build();
-        User saved = userService.createUser(user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(UserResponse.fromEntity(saved));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(UserResponse.fromEntity(userService.createUser(request)));
     }
 
     @GetMapping("/performance")

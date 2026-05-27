@@ -41,4 +41,7 @@ public class Purchase {
 
     @NotNull
     private LocalDate purchaseDate;
+
+    @Version
+    private Long version;
 }

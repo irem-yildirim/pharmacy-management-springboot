@@ -1,5 +1,7 @@
 package com.pharmacy.service;
 
+import com.pharmacy.dto.request.UserCreateRequest;
+import com.pharmacy.model.Role;
 import com.pharmacy.model.Sale;
 import com.pharmacy.model.User;
 import com.pharmacy.repository.SaleRepository;
@@ -37,9 +39,14 @@ public class UserService {
     }
 
     @Transactional
-    public User createUser(User user) {
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setIsActive(true);
+    public User createUser(UserCreateRequest request) {
+        User user = User.builder()
+                .name(request.getName())
+                .username(request.getUsername())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .role(Role.valueOf(request.getRole()))
+                .isActive(true)
+                .build();
         return userRepository.save(user);
     }
 

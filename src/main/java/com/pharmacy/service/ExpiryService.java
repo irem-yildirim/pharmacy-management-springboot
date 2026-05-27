@@ -2,11 +2,8 @@ package com.pharmacy.service;
 
 import com.pharmacy.model.Purchase;
 import com.pharmacy.repository.PurchaseRepository;
-import com.pharmacy.strategy.CriticalStrategy;
-import com.pharmacy.strategy.ExpiredStrategy;
 import com.pharmacy.strategy.ExpiryStrategy;
-import com.pharmacy.strategy.OkStrategy;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,24 +13,21 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class ExpiryService {
 
-    private final ExpiredStrategy expiredStrategy;
-    private final CriticalStrategy criticalStrategy;
-    private final OkStrategy okStrategy;
-    private final PurchaseRepository purchaseRepository;
+    @Autowired
+    private List<ExpiryStrategy> strategies;
+
+    @Autowired
+    private PurchaseRepository purchaseRepository;
 
     public String evaluateExpiry(LocalDate expirationDate) {
         long daysRemaining = ChronoUnit.DAYS.between(LocalDate.now(), expirationDate);
-        ExpiryStrategy strategy = resolveStrategy(daysRemaining);
-        return strategy.evaluate(daysRemaining);
-    }
-
-    private ExpiryStrategy resolveStrategy(long daysRemaining) {
-        if (daysRemaining <= 0) return expiredStrategy;
-        if (daysRemaining <= 30) return criticalStrategy;
-        return okStrategy;
+        return strategies.stream()
+                .filter(s -> s.isApplicable(daysRemaining))
+                .findFirst()
+                .map(s -> s.evaluate(daysRemaining))
+                .orElse("OK");
     }
 
     @Transactional

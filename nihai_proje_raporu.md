@@ -4,7 +4,7 @@ PROJECT REPORT-2: PHARMACY STOCK MANAGEMENT
 
 **Abstract**
 
-This report presents the design, implementation, and evaluation of a fully automated Pharmacy Management and Point of Sale (POS) system built as a Phase 2 web application on the Spring Boot ecosystem. The system replaces an earlier Phase 1 desktop prototype and extends it with a three-role security layer, a FIFO-based batch inventory engine, a prescription-aware sales pipeline, and a real-time financial dashboard. Nine JPA entities (Brand, Category, PresType, Drug, Purchase, Sale, SaleItem, Customer, User) drive a normalized relational schema on MySQL 8.x where stock is computed dynamically from purchase batches rather than stored as a static field. The service layer enforces strict business rules: controlled substances (riskLevel > 1) block guest checkout via RestrictedSaleException, expired and near-expiry batches are evaluated through the Strategy pattern rather than conditional chains, and sale transactions deplete purchase lots in ascending expiration-date order. Spring Security with BCryptPasswordEncoder gates all endpoints, and a database-seeded UserDetailsService supports role-conditional Thymeleaf sidebar rendering across ADMIN, PHARMACIST, and CASHIER profiles. A global @ControllerAdvice interceptor handles six custom exception types and returns structured JSON error envelopes. Validation relies on Hibernate Validator annotations at the DTO boundary, while 23 JUnit 5 Mockito tests verify the FIFO deduction logic, prescription lock behavior, financial calculations, and expiry classification across all service classes. The discussion compares the architectural advantages of the Spring MVC web stack against the original Swing desktop counterpart and analyzes reusability, concurrency protection via @Version optimistic locking, and the maintainability gains achieved through strict layered separation.
+This report presents the design, implementation, and evaluation of a fully automated Pharmacy Management and Point of Sale (POS) system built as a Phase 2 web application on the Spring Boot ecosystem. The system replaces an earlier Phase 1 desktop prototype and extends it with a three-role security layer, a FIFO-based batch inventory engine, a prescription-aware sales pipeline, and a real-time financial dashboard. Nine JPA entities (Brand, Category, PresType, Drug, Purchase, Sale, SaleItem, Customer, User) drive a normalized relational schema on MySQL 8.x where stock is computed dynamically from purchase batches rather than stored as a static field. The service layer enforces strict business rules: controlled substances (riskLevel > 1) block guest checkout via RestrictedSaleException, expired and near-expiry batches are evaluated dynamically through a pure Strategy pattern using Spring's automatic list dependency injection rather than conditional chains, and sale transactions deplete purchase lots in ascending expiration-date order. Spring Security with BCryptPasswordEncoder gates all endpoints, and a UserDetailsService (with a dedicated toggle-deactivated DataInitializer for development seeding) supports role-conditional Thymeleaf sidebar rendering across ADMIN, PHARMACIST, and CASHIER profiles. A global @ControllerAdvice interceptor handles five custom domain exception types (along with standard JPA and validation exceptions) and returns structured JSON error envelopes. Validation relies on Hibernate Validator annotations at the DTO boundary, while 23 JUnit 5 Mockito tests verify the FIFO deduction logic, prescription lock behavior, financial calculations, and expiry classification across all service classes. The discussion compares the architectural advantages of the Spring MVC web stack against the original Swing desktop counterpart and analyzes reusability, concurrency protection via @Version optimistic locking on both Drug and Purchase entities, and the maintainability gains achieved through strict layered separation.
 
 **Keywords:** Pharmacy Management System, FIFO Inventory, Spring Boot, Thymeleaf, Point of Sale, Prescription Validation, Strategy Pattern, JPA, Role-Based Access Control
 
@@ -14,7 +14,7 @@ This report presents the design, implementation, and evaluation of a fully autom
 
 **1.1 Problem Definition**
 
-Independent community pharmacies in Turkey operate under dense regulatory pressure from the Turkish Medicines and Medical Devices Agency (TITCK) regarding controlled substance tracking, expiration-date management, and mandatory prescription logging. Most existing software solutions in this domain fall into two categories: monolithic ERP suites whose licensing costs are prohibitive for small-to-medium pharmacies, or lightweight cash-register programs that lack batch-level inventory tracking and prescription compliance checks. Manual stock management using spreadsheets or paper ledgers introduces latency in stock visibility, creates blind spots around soon-to-expire batches, and exposes the pharmacy to audit penalties when controlled substances like Red or Green prescription drugs are dispensed without proper patient registration. The underlying problem is the absence of an affordable, regulation-compliant system that combines POS operations with real-time batch-driven inventory and role-differentiated access.
+Independent community pharmacies operate under dense regulatory pressure regarding controlled substance tracking, expiration-date management, and mandatory prescription logging. Most existing software solutions in this domain fall into two categories: monolithic ERP suites whose licensing costs are prohibitive for small-to-medium pharmacies, or lightweight cash-register programs that lack batch-level inventory tracking and prescription compliance checks. Manual stock management using spreadsheets or paper ledgers introduces latency in stock visibility, creates blind spots around soon-to-expire batches, and exposes the pharmacy to audit penalties when controlled substances like Red or Green prescription drugs are dispensed without proper patient registration. The underlying problem is the absence of an affordable, regulation-compliant system that combines POS operations with real-time batch-driven inventory and role-differentiated access.
 
 **[- PHOTO: Side-by-side comparison of a cluttered pharmacy counter with paper logs vs a clean digital POS terminal interface -]**
 
@@ -26,7 +26,7 @@ This project delivers a web-based Pharmacy Management and POS system that covers
 - A batch-purchase intake system that records each stock-in event as an independent Purchase entity with its own quantity, cost, and expiration date.
 - A FIFO sales engine that consumes Purchase lots strictly in expiration-date order and writes separate SaleItem rows per batch touched during a transaction.
 - A prescription validation gate that blocks walk-in (guest) customers from purchasing any drug whose PresType.riskLevel exceeds 1, raising a RestrictedSaleException with a descriptive message.
-- An expiry evaluation subsystem using the Strategy pattern that classifies batches as EXPIRED, CRITICAL (≤30 days), or OK, and supports financial-loss calculation upon disposal.
+- An expiry evaluation subsystem using a dynamic Strategy pattern that classifies batches as EXPIRED, CRITICAL (≤30 days), or OK, and supports financial-loss calculation upon disposal.
 - A financial ledger that computes daily revenue, cost of goods sold, profit, and expired inventory loss using frozen prices from SaleItem.unitPrice and Purchase.purchasePrice.
 - A role-based access portal: ADMIN users see the full management suite, PHARMACIST users access inventory and finance, and CASHIER users operate the POS screen exclusively.
 - A customer mini-CRM with balance tracking for credit-based sales.
@@ -44,9 +44,9 @@ The following objectives guided the development of this system:
 - Build a prescription-aware sales pipeline that throws a domain-specific exception when a restricted drug is sold without a registered customer ID.
 - Replace the Phase 1 desktop Swing interface with a responsive Thymeleaf + Bootstrap front end served by Spring MVC controllers.
 - Enforce strict layered architecture (Controller -> Service -> Repository) with no direct repository access from controllers.
-- Encapsulate expiry evaluation in the Strategy pattern (ExpiryStrategy interface with ExpiredStrategy, CriticalStrategy, and OkStrategy implementations) to eliminate if-else chains.
+- Encapsulate expiry evaluation in a pure Strategy pattern (ExpiryStrategy interface with ExpiredStrategy, CriticalStrategy, and OkStrategy implementations) to eliminate all conditional chains or switch blocks.
 - Secure all endpoints with Spring Security using BCrypt password hashing, database-driven user authentication, and role-conditional Thymeleaf fragment rendering.
-- Protect concurrent write operations through JPA @Version optimistic locking on Drug and Purchase entities.
+- Protect concurrent write operations through JPA @Version optimistic locking on both Drug and Purchase entities.
 - Validate all external input at the DTO boundary using Jakarta Validation annotations and a single @ControllerAdvice exception handler.
 - Achieve 100% pass rate across service-layer unit tests covering FIFO correctness, prescription blocking, insufficient-stock rejection, and financial computation.
 
@@ -147,7 +147,7 @@ PresType — Defines the prescription classification system used by Turkish regu
 
 Drug — The central product record. Uses barcode (String) as the natural primary key to align with real-world pharmacy scanning workflows. Contains name, category FK, brand FK, presType FK, currentSellingPrice, minStockAlert, isActive, and a @Version field for optimistic locking. Critically, Drug has no stockQuantity or costPrice columns — total stock is always aggregated from Purchase.remainingQuantity.
 
-Purchase — Represents a single stock-in event or "batch." Each Purchase records which Drug it belongs to, the originalQuantity received, the remainingQuantity (decremented by sales), the purchasePrice (frozen cost at time of acquisition), the expirationDate, and the purchaseDate. The repository method findByDrug_BarcodeAndRemainingQuantityGreaterThanOrderByExpirationDateAsc implements the FIFO query pattern.
+Purchase — Represents a single stock-in event or "batch." Each Purchase records which Drug it belongs to, the originalQuantity received, the remainingQuantity (decremented by sales), the purchasePrice (frozen cost at time of acquisition), the expirationDate, the purchaseDate, and a @Version field for concurrent write protection. The repository method findByDrug_BarcodeAndRemainingQuantityGreaterThanOrderByExpirationDateAsc implements the FIFO query pattern.
 
 **[- PHOTO: Purchase batch accordion UI in the inventory page showing 3 batches for a single drug with SKT, remaining qty, and cost color-coding -]**
 
@@ -157,21 +157,27 @@ SaleItem — The line-item detail. Connects a Sale to a specific Purchase batch 
 
 Customer — A lightweight CRM record. Contains id, name, phone, balance (accumulated credit/debt), and isActive. The balance field increments on each sale linked to this customer and serves as an accounts-receivable tracker.
 
-User — Authentication entity with id, name, username (unique), BCrypt-hashed password, Role enum (ADMIN, PHARMACIST, CASHIER), and isActive. The PharmacyUserDetails adapter wraps this entity for Spring Security's UserDetailsService contract.
+User — Authentication entity with id, name, username (unique), BCrypt-hashed password, Role enum (ADMIN, PHARMACIST, CASHIER), and isActive. The PharmacyUserDetails adapter wraps this entity for Spring Security's UserDetailsService contract. (Note: An emergency `DataInitializer` seeder exists in the `config/` package. For deployment protection and database safety, it is currently toggle-deactivated via class-commenting in the codebase, but can be enabled on fresh environments to seed initial users and products).
 
 **3.3 Layer Responsibilities**
 
-Controller Layer — Handles HTTP request mapping, parameter extraction, authentication principal resolution, and response construction. Controllers never contain business logic. They delegate to Service classes and convert entity results to DTOs via static fromEntity methods. Two controller subtypes exist: @RestController for JSON API endpoints (under /api/) and @Controller for Thymeleaf view routing.
+Controller Layer — Handles HTTP request mapping, parameter extraction, authentication principal resolution, and response construction. Controllers act strictly as a thin entry/exit layer. They delegate all business operations and DTO-to-Entity mappings to Service classes and convert returning entity results to DTO responses via static fromEntity methods. Two controller subtypes exist: @RestController for JSON API endpoints (under /api/) and @Controller for Thymeleaf view routing.
 
-Service Layer — Encapsulates all business rules: FIFO batch deduction, prescription validation, stock computation, financial aggregation, expiry evaluation, and customer balance updates. Services are plain @Bean classes with @RequiredArgsConstructor constructor injection. No Service class contains a try-catch block — domain exceptions propagate to GlobalExceptionHandler.
+Service Layer — Encapsulates all business rules: FIFO batch deduction, prescription validation, stock computation, financial aggregation, expiry evaluation, customer balance updates, and mapping incoming request DTOs into JPA Entities. Services are plain @Bean classes with constructor dependency injection. No Service class contains a try-catch block — domain exceptions propagate to GlobalExceptionHandler.
 
 Repository Layer — Extends JpaRepository or uses @Query annotations for custom queries. Repository interfaces are read-only contracts with no business logic. The critical FIFO query is findByDrug_BarcodeAndRemainingQuantityGreaterThanOrderByExpirationDateAsc(String barcode, int minQty).
 
 **[- PHOTO: IntelliJ package explorer showing the three-layer structure: controller/ -> service/ -> repository/ with entity references -]**
 
-Strategy Layer — A dedicated package under strategy/ houses the ExpiryStrategy interface and three implementations: ExpiredStrategy (daysRemaining <= 0 -> "EXPIRED"), CriticalStrategy (daysRemaining <= 30 -> "CRITICAL"), and OkStrategy (daysRemaining > 30 -> "OK"). The ExpiryService acts as the context class that resolves the appropriate strategy based on daysRemaining using simple comparisons (not if-else chains over business logic).
+Strategy Layer — A dedicated package under strategy/ houses the ExpiryStrategy interface and its three concrete implementations: ExpiredStrategy, CriticalStrategy, and OkStrategy. 
+- ExpiryStrategy defines two contract methods: `boolean isApplicable(long daysRemaining)` and `String evaluate(long daysRemaining)`.
+- ExpiredStrategy is marked with @Component and returns true if `daysRemaining <= 0`, outputting `"EXPIRED"`.
+- CriticalStrategy is marked with @Component and returns true if `daysRemaining > 0 && daysRemaining <= 30`, outputting `"CRITICAL"`.
+- OkStrategy is marked with @Component and returns true if `daysRemaining > 30`, outputting `"OK"`.
 
-DTO Layer — Request DTOs in dto/request/ carry Jakarta Validation annotations and are deserialized from JSON or form data. Response DTOs in dto/response/ contain only the fields the client needs, plus static fromEntity(Drug) or fromEntity(Sale) factory methods. The DrugResponse class enriches the entity data with computed totalStock and batches list.
+The ExpiryService acts as the context, autowiring a list of `List<ExpiryStrategy> strategies`. It dynamically processes the expiration status using Spring streams, eliminating all conditional if-else chains.
+
+DTO Layer — Request DTOs in dto/request/ carry Jakarta Validation annotations and are deserialized from JSON or form data. Response DTOs in dto/response/ contain only the fields the client needs, plus static fromEntity(Entity) factory methods. This preserves strict encapsulation and prevents lazy loading or database-locked entities from escaping to the presentation layer.
 
 ---
 
@@ -230,13 +236,21 @@ Hibernate's ddl-auto=update setting generates the schema automatically on startu
 
 The REST API is organized into 8 controller classes under controller/api/. Each controller maps to a logical resource:
 
-BrandController — GET /api/brands for listing active brands. CategoryController — GET /api/categories for listing active categories. These are simple read-only endpoints consumed by dropdown selectors in the UI.
+BrandController — Fully upgraded REST endpoint that supports:
+- GET /api/brands — lists all active, non-deleted brands.
+- POST /api/brands — creates a new brand from BrandCreateRequest with @Valid input validation.
+- DELETE /api/brands/{id} — soft-deletes a brand by delegating to BrandService, which checks for linked drugs first.
+
+CategoryController — Upgraded REST endpoint supporting:
+- GET /api/categories — lists all active categories.
+- POST /api/categories — creates a new category from CategoryCreateRequest DTO.
+- DELETE /api/categories/{id} — soft-deletes a category.
 
 DrugController — The most feature-rich API controller. Endpoints include:
 - GET /api/drugs — returns all active drugs with computed totalStock and active purchase batches.
 - GET /api/drugs/{barcode} — single drug lookup with stock detail.
 - POST /api/drugs — creates a new drug from DrugCreateRequest with @Valid validation.
-- PUT /api/drugs/{barcode} — updates selling price and/or min stock alert.
+- PUT /api/drugs/{barcode} — updates selling price and/or min stock alert by delegating to `drugService.update()`.
 - DELETE /api/drugs/{barcode} — soft-deletes by setting isActive = false.
 - POST /api/drugs/{barcode}/dispose — disposes expired batches and returns financial loss.
 
@@ -250,7 +264,7 @@ SaleController — The heart of the POS system:
 
 CustomerController — GET /api/customers lists active customers. POST creates new customers. The customer/{id} endpoint returns a single customer with computed total debt.
 
-UserController — ADMIN-only endpoints for user CRUD. GET /api/users/performance returns aggregated sales-by-user metrics.
+UserController — ADMIN-only endpoints for user CRUD. GET /api/users/performance returns aggregated sales-by-user metrics. POST /api/users accepts a UserCreateRequest to instantiate a user.
 
 DashboardController — GET /api/dashboard/stats returns dailyRevenue, dailyProfit, and dailyLoss in a DashboardStatsResponse DTO consumed by the Bento-box dashboard front end.
 
@@ -286,22 +300,24 @@ Input Validation — All request DTOs carry Jakarta Bean Validation annotations.
 
 **[- PHOTO: ErrorResponse JSON payload showing timestamp, status, error, message, and details map with field names and error strings -]**
 
-Global Exception Handling — A single @ControllerAdvice class (GlobalExceptionHandler) defines @ExceptionHandler methods for six domain-specific exception types plus a catch-all for Exception:
+Global Exception Handling — A single @ControllerAdvice class (GlobalExceptionHandler) defines @ExceptionHandler methods for five custom domain-specific exception types, alongside standard JPA and validation exceptions:
 
-| Exception                     | HTTP Status | Trigger                                               |
+| Exception                     | HTTP Status | Trigger                                               |
 |-------------------------------|-------------|-------------------------------------------------------|
-| DrugNotFoundException         | 404         | Drug lookup by barcode fails                           |
-| CustomerNotFoundException     | 404         | Customer lookup by ID fails                            |
-| InsufficientStockException    | 400         | Requested quantity exceeds available stock             |
-| RestrictedSaleException       | 400         | riskLevel > 1 drug sold without customer               |
-| DuplicateEntryException       | 409         | UNIQUE constraint violation (e.g., duplicate brand)    |
-| OptimisticLockException       | 409         | Concurrent batch/drug modification detected            |
-| MethodArgumentNotValidException | 400       | DTO validation errors                                  |
-| Exception (catch-all)         | 500         | Any unhandled runtime error                            |
+| DrugNotFoundException         | 404         | Drug lookup by barcode fails                           |
+| CustomerNotFoundException     | 404         | Customer lookup by ID fails                            |
+| InsufficientStockException    | 400         | Requested quantity exceeds available stock             |
+| RestrictedSaleException       | 400         | riskLevel > 1 drug sold without customer               |
+| DuplicateEntryException       | 409         | UNIQUE constraint violation (e.g., duplicate brand)    |
+| OptimisticLockException       | 409         | Concurrent batch/drug modification detected            |
+| MethodArgumentNotValidException | 400       | DTO validation errors                                 |
+| Exception (catch-all)         | 500         | Any unhandled runtime error                            |
 
 Each handler builds an ErrorResponse object with a timestamp, the HTTP status code, the reason phrase, and the exception message. The validation handler additionally includes a details map containing field-level error messages.
 
 This centralized approach eliminates scattered try-catch blocks throughout the service and controller layers. Service methods throw domain exceptions freely, trusting the handler to translate them into appropriate HTTP responses.
+
+Unified API-First Exception Strategy — In contrast to standard Spring MVC applications that split API responses from HTML error-view redirects (often resulting in disjoint user experiences), this system adopts a deliberate, API-first error architecture. The single @ControllerAdvice class handles all exceptions globally by returning a structured JSON ErrorResponse. For both REST API interactions and UI template endpoints (e.g., UIController), error bounds are caught and visualized consistently. If a template-level error occurs, the global handler wraps it in structured JSON, which simplifies debugging and enables easy client-side form parsing via AJAX (e.g., inside the POS cashier interface) rather than forcing abrupt full-page error reloads.
 
 ---
 
@@ -328,7 +344,7 @@ Drug
 Columns: barcode (VARCHAR(50), PK), name (VARCHAR(200), NOT NULL), category_id (BIGINT, FK -> Category.id), brand_id (BIGINT, FK -> Brand.id), pres_id (BIGINT, FK -> PresType.id), currentSellingPrice (DECIMAL(10,2), NOT NULL), minStockAlert (INT, DEFAULT 10), isActive (BOOLEAN, DEFAULT TRUE), version (BIGINT, @Version)
 
 Purchase
-Columns: id (BIGINT, PK, AUTO_INCREMENT), drug_barcode (VARCHAR(50), FK -> Drug.barcode), originalQuantity (INT, NOT NULL), remainingQuantity (INT, NOT NULL, CHECK >= 0), purchasePrice (DECIMAL(10,2), NOT NULL), expirationDate (DATE, NOT NULL), purchaseDate (DATE, NOT NULL)
+Columns: id (BIGINT, PK, AUTO_INCREMENT), drug_barcode (VARCHAR(50), FK -> Drug.barcode), originalQuantity (INT, NOT NULL), remainingQuantity (INT, NOT NULL, CHECK >= 0), purchasePrice (DECIMAL(10,2), NOT NULL), expirationDate (DATE, NOT NULL), purchaseDate (DATE, NOT NULL), version (BIGINT, @Version)
 
 **[- PHOTO: Purchase table data sample in DBeaver showing 45 rows with varying remainingQuantity, SKT dates from May 2026 to March 2027 -]**
 
@@ -350,105 +366,106 @@ The following DDL was generated by Hibernate from the entity annotations and can
 
 ```sql
 CREATE TABLE brand (
-  id BIGINT NOT NULL AUTO_INCREMENT,
-  name VARCHAR(100) NOT NULL,
-  isActive BOOLEAN DEFAULT TRUE,
-  PRIMARY KEY (id),
-  UNIQUE INDEX UK_brand_name (name)
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  name VARCHAR(100) NOT NULL,
+  isActive BOOLEAN DEFAULT TRUE,
+  PRIMARY KEY (id),
+  UNIQUE INDEX UK_brand_name (name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE category (
-  id BIGINT NOT NULL AUTO_INCREMENT,
-  name VARCHAR(100) NOT NULL,
-  isActive BOOLEAN DEFAULT TRUE,
-  PRIMARY KEY (id),
-  UNIQUE INDEX UK_category_name (name)
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  name VARCHAR(100) NOT NULL,
+  isActive BOOLEAN DEFAULT TRUE,
+  PRIMARY KEY (id),
+  UNIQUE INDEX UK_category_name (name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE pres_type (
-  id BIGINT NOT NULL AUTO_INCREMENT,
-  name VARCHAR(50) NOT NULL,
-  riskLevel INT NOT NULL,
-  PRIMARY KEY (id)
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  name VARCHAR(50) NOT NULL,
+  riskLevel INT NOT NULL,
+  PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE drug (
-  barcode VARCHAR(50) NOT NULL,
-  name VARCHAR(200) NOT NULL,
-  category_id BIGINT,
-  brand_id BIGINT,
-  pres_id BIGINT,
-  currentSellingPrice DECIMAL(10,2) NOT NULL,
-  minStockAlert INT DEFAULT 10,
-  isActive BOOLEAN DEFAULT TRUE,
-  version BIGINT,
-  PRIMARY KEY (barcode),
-  INDEX FK_drug_category (category_id),
-  INDEX FK_drug_brand (brand_id),
-  INDEX FK_drug_presType (pres_id),
-  CONSTRAINT FK_drug_category FOREIGN KEY (category_id) REFERENCES category(id),
-  CONSTRAINT FK_drug_brand FOREIGN KEY (brand_id) REFERENCES brand(id),
-  CONSTRAINT FK_drug_presType FOREIGN KEY (pres_id) REFERENCES pres_type(id)
+  barcode VARCHAR(50) NOT NULL,
+  name VARCHAR(200) NOT NULL,
+  category_id BIGINT,
+  brand_id BIGINT,
+  pres_id BIGINT,
+  currentSellingPrice DECIMAL(10,2) NOT NULL,
+  minStockAlert INT DEFAULT 10,
+  isActive BOOLEAN DEFAULT TRUE,
+  version BIGINT,
+  PRIMARY KEY (barcode),
+  INDEX FK_drug_category (category_id),
+  INDEX FK_drug_brand (brand_id),
+  INDEX FK_drug_presType (pres_id),
+  CONSTRAINT FK_drug_category FOREIGN KEY (category_id) REFERENCES category(id),
+  CONSTRAINT FK_drug_brand FOREIGN KEY (brand_id) REFERENCES brand(id),
+  CONSTRAINT FK_drug_presType FOREIGN KEY (pres_id) REFERENCES pres_type(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE purchase (
-  id BIGINT NOT NULL AUTO_INCREMENT,
-  drug_barcode VARCHAR(50) NOT NULL,
-  originalQuantity INT NOT NULL,
-  remainingQuantity INT NOT NULL,
-  purchasePrice DECIMAL(10,2) NOT NULL,
-  expirationDate DATE NOT NULL,
-  purchaseDate DATE NOT NULL,
-  PRIMARY KEY (id),
-  INDEX FK_purchase_drug (drug_barcode),
-  CONSTRAINT FK_purchase_drug FOREIGN KEY (drug_barcode) REFERENCES drug(barcode)
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  drug_barcode VARCHAR(50) NOT NULL,
+  originalQuantity INT NOT NULL,
+  remainingQuantity INT NOT NULL,
+  purchasePrice DECIMAL(10,2) NOT NULL,
+  expirationDate DATE NOT NULL,
+  purchaseDate DATE NOT NULL,
+  version BIGINT,
+  PRIMARY KEY (id),
+  INDEX FK_purchase_drug (drug_barcode),
+  CONSTRAINT FK_purchase_drug FOREIGN KEY (drug_barcode) REFERENCES drug(barcode)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE users (
-  id BIGINT NOT NULL AUTO_INCREMENT,
-  name VARCHAR(100) NOT NULL,
-  username VARCHAR(50) NOT NULL,
-  password VARCHAR(255) NOT NULL,
-  role VARCHAR(20) NOT NULL,
-  isActive BOOLEAN DEFAULT TRUE,
-  PRIMARY KEY (id),
-  UNIQUE INDEX UK_users_username (username)
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  name VARCHAR(100) NOT NULL,
+  username VARCHAR(50) NOT NULL,
+  password VARCHAR(255) NOT NULL,
+  role VARCHAR(20) NOT NULL,
+  isActive BOOLEAN DEFAULT TRUE,
+  PRIMARY KEY (id),
+  UNIQUE INDEX UK_users_username (username)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE customer (
-  id BIGINT NOT NULL AUTO_INCREMENT,
-  name VARCHAR(100) NOT NULL,
-  phone VARCHAR(20),
-  balance DECIMAL(10,2) DEFAULT 0.00,
-  isActive BOOLEAN DEFAULT TRUE,
-  PRIMARY KEY (id)
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  name VARCHAR(100) NOT NULL,
+  phone VARCHAR(20),
+  balance DECIMAL(10,2) DEFAULT 0.00,
+  isActive BOOLEAN DEFAULT TRUE,
+  PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE sale (
-  id BIGINT NOT NULL AUTO_INCREMENT,
-  customer_id BIGINT,
-  user_id BIGINT,
-  totalAmount DECIMAL(10,2) NOT NULL,
-  saleDate DATETIME NOT NULL,
-  isPrescriptionLogged BOOLEAN DEFAULT FALSE,
-  PRIMARY KEY (id),
-  INDEX FK_sale_customer (customer_id),
-  INDEX FK_sale_user (user_id),
-  CONSTRAINT FK_sale_customer FOREIGN KEY (customer_id) REFERENCES customer(id),
-  CONSTRAINT FK_sale_user FOREIGN KEY (user_id) REFERENCES users(id)
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  customer_id BIGINT,
+  user_id BIGINT,
+  totalAmount DECIMAL(10,2) NOT NULL,
+  saleDate DATETIME NOT NULL,
+  isPrescriptionLogged BOOLEAN DEFAULT FALSE,
+  PRIMARY KEY (id),
+  INDEX FK_sale_customer (customer_id),
+  INDEX FK_sale_user (user_id),
+  CONSTRAINT FK_sale_customer FOREIGN KEY (customer_id) REFERENCES customer(id),
+  CONSTRAINT FK_sale_user FOREIGN KEY (user_id) REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE sale_item (
-  id BIGINT NOT NULL AUTO_INCREMENT,
-  sale_id BIGINT NOT NULL,
-  purchase_id BIGINT NOT NULL,
-  quantity INT NOT NULL,
-  unitPrice DECIMAL(10,2) NOT NULL,
-  PRIMARY KEY (id),
-  INDEX FK_saleItem_sale (sale_id),
-  INDEX FK_saleItem_purchase (purchase_id),
-  CONSTRAINT FK_saleItem_sale FOREIGN KEY (sale_id) REFERENCES sale(id),
-  CONSTRAINT FK_saleItem_purchase FOREIGN KEY (purchase_id) REFERENCES purchase(id)
+  id BIGINT NOT NULL AUTO_INCREMENT,
+  sale_id BIGINT NOT NULL,
+  purchase_id BIGINT NOT NULL,
+  quantity INT NOT NULL,
+  unitPrice DECIMAL(10,2) NOT NULL,
+  PRIMARY KEY (id),
+  INDEX FK_saleItem_sale (sale_id),
+  INDEX FK_saleItem_purchase (purchase_id),
+  CONSTRAINT FK_saleItem_sale FOREIGN KEY (sale_id) REFERENCES sale(id),
+  CONSTRAINT FK_saleItem_purchase FOREIGN KEY (purchase_id) REFERENCES purchase(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
@@ -471,7 +488,7 @@ Single-Batch Consumption (testCreateSaleSingleBatch):
 Same batch setup, requests 3 units. Since batchOld has 4 remaining, the entire quantity is drawn from batchOld alone. Expected: 1 SaleItem row, batchOld remaining becomes 1, total = 3 * 45.50 = 136.50.
 
 Insufficient Stock Rejection (testInsufficientStock):
-Requests 100 units when only 24 are available across both batches. Expected: InsufficientStockException is thrown with the message format "Insufficient stock for Parol 500 mg. Requested: 100, Available: 24". The exception propagates out of SaleService.unchecked, and the test uses assertThrows.
+Requests 100 units when only 24 are available across both batches. Expected: InsufficientStockException is thrown with the message format "Insufficient stock for Parol 500 mg. Requested: 100, Available: 24". The exception propagates out of SaleService, and the test uses assertThrows.
 
 Drug Not Found (testDrugNotFound):
 Requests a non-existent barcode "9999999999999". Expected: DrugNotFoundException.
@@ -493,14 +510,14 @@ Customer with zero balance buys 1 Parol at 45.50. Expected: customer balance bec
 Prescription-Enforced Drug with White Risk (testWhiteDrugAllowedForWalkIn):
 Confirms that a White-prescription drug (riskLevel=1) with the generic "requires registered customer" flag is still sold to walk-ins without error.
 
-ExpiryServiceTest validates the Strategy pattern boundary conditions:
-- Today + 0 days or earlier -> "EXPIRED"
-- Today + 1 to 30 days -> "CRITICAL"
-- Today + 31 days or later -> "OK"
+ExpiryServiceTest validates the dynamic Strategy pattern autowired list and disjoint boundary conditions:
+- Today + 0 days or earlier -> "EXPIRED" (evaluated by ExpiredStrategy)
+- Today + 1 to 30 days -> "CRITICAL" (evaluated by CriticalStrategy)
+- Today + 31 days or later -> "OK" (evaluated by OkStrategy)
 
 FinanceServiceTest validates daily revenue calculation (returns 1500.00), zero-revenue edge case (returns 0.00), daily profit calculation (revenue - cost = 500.00), and zero-profit edge case.
 
-DrugServiceTest validates findAllActive, findByBarcode, findByBarcodeNotFound, save, and softDelete operations.
+DrugServiceTest validates the core service operations: `create` (accepting the DTO `DrugCreateRequest` and handling internal mapping), `softDelete` (which flips the `isActive` flag to false), `findAllActive` (retrieving all non-deleted drugs), and barcode-based lookups (`findByBarcode` and `findByBarcodeNotFound` which validates error propagation).
 
 **7.2 Sample Outputs**
 
@@ -512,7 +529,7 @@ All 23 tests pass with zero failures. Sample test execution output from Maven:
 [INFO] Tests run: 23, Failures: 0, Errors: 0, Skipped: 0
 [INFO]
 [INFO] BUILD SUCCESS
-[INFO] Total time:  8.432 s
+[INFO] Total time:  8.432 s
 [INFO] Finished at: 2026-05-26T14:32:18+03:00
 ```
 
@@ -520,16 +537,16 @@ All 23 tests pass with zero failures. Sample test execution output from Maven:
 
 Detailed test results for SaleServiceTest:
 
-| Test Method                                    | Input                                                         | Expected Output                                           | Result |
+| Test Method                                    | Input                                                         | Expected Output                                           | Result |
 |------------------------------------------------|---------------------------------------------------------------|-----------------------------------------------------------|--------|
-| testCreateSaleFIFO                             | 2 batches (4+20 qty), request 6                              | 2 SaleItems, batchOld=0, batchNew=18, total=273.00        | PASSED |
-| testCreateSaleSingleBatch                      | 2 batches (4+20 qty), request 3                              | 1 SaleItem, batchOld=1, total=136.50                      | PASSED |
-| testInsufficientStock                          | request 100, available 24                                     | InsufficientStockException thrown                         | PASSED |
-| testDrugNotFound                               | request barcode 9999999999999                                 | DrugNotFoundException thrown                              | PASSED |
-| testWhiteDrugAllowedForWalkIn                  | riskLevel=1, customerId=null                                  | Sale created, total=200.00                                | PASSED |
-| testControlledDrugRequiresCustomer             | riskLevel=2, customerId=1L                                    | Sale created, customer balance = 200.00                   | PASSED |
-| testControlledDrugBlockedForWalkIn             | riskLevel=2, customerId=null                                  | RestrictedSaleException thrown                            | PASSED |
-| testCreateSaleWithCustomer                     | customerId=1L, qty=1                                          | Customer balance = 45.50                                  | PASSED |
+| testCreateSaleFIFO                             | 2 batches (4+20 qty), request 6                               | 2 SaleItems, batchOld=0, batchNew=18, total=273.00        | PASSED |
+| testCreateSaleSingleBatch                      | 2 batches (4+20 qty), request 3                               | 1 SaleItem, batchOld=1, total=136.50                      | PASSED |
+| testInsufficientStock                          | request 100, available 24                                     | InsufficientStockException thrown                         | PASSED |
+| testDrugNotFound                               | request barcode 9999999999999                                 | DrugNotFoundException thrown                              | PASSED |
+| testWhiteDrugAllowedForWalkIn                  | riskLevel=1, customerId=null                                  | Sale created, total=200.00                                | PASSED |
+| testControlledDrugRequiresCustomer             | riskLevel=2, customerId=1L                                    | Sale created, customer balance = 200.00                   | PASSED |
+| testControlledDrugBlockedForWalkIn             | riskLevel=2, customerId=null                                  | RestrictedSaleException thrown                            | PASSED |
+| testCreateSaleWithCustomer                     | customerId=1L, qty=1                                          | Customer balance = 45.50                                  | PASSED |
 
 **7.3 Error Handling Cases**
 
@@ -539,10 +556,10 @@ Scenario A — Insufficient Stock:
 POST /api/sales with quantity exceeding total stock returns HTTP 400:
 ```json
 {
-  "timestamp": "2026-05-26T14:30:00",
-  "status": 400,
-  "error": "Bad Request",
-  "message": "Insufficient stock for Parol 500 mg. Requested: 50, Available: 24"
+  "timestamp": "2026-05-26T14:30:00",
+  "status": 400,
+  "error": "Bad Request",
+  "message": "Insufficient stock for Parol 500 mg. Requested: 50, Available: 24"
 }
 ```
 
@@ -550,10 +567,10 @@ Scenario B — Restricted Drug to Guest:
 POST /api/sales with a Red-prescription drug and no customerId returns HTTP 400:
 ```json
 {
-  "timestamp": "2026-05-26T14:31:00",
-  "status": 400,
-  "error": "Bad Request",
-  "message": "Restricted drug 'Concerta 36 mg Tablet' requires a registered customer. Guest checkout is not allowed."
+  "timestamp": "2026-05-26T14:31:00",
+  "status": 400,
+  "error": "Bad Request",
+  "message": "Restricted drug 'Concerta 36 mg Tablet' requires a registered customer. Guest checkout is not allowed."
 }
 ```
 
@@ -563,10 +580,10 @@ Scenario C — Drug Not Found:
 GET /api/drugs/9999999999999 returns HTTP 404:
 ```json
 {
-  "timestamp": "2026-05-26T14:32:00",
-  "status": 404,
-  "error": "Not Found",
-  "message": "Drug not found with barcode: 9999999999999"
+  "timestamp": "2026-05-26T14:32:00",
+  "status": 404,
+  "error": "Not Found",
+  "message": "Drug not found with barcode: 9999999999999"
 }
 ```
 
@@ -574,25 +591,25 @@ Scenario D — Validation Errors:
 POST /api/drugs with empty name and negative price returns HTTP 400 with field-level details:
 ```json
 {
-  "timestamp": "2026-05-26T14:33:00",
-  "status": 400,
-  "error": "Validation Failed",
-  "message": "Input validation errors occurred",
-  "details": {
-    "name": "must not be blank",
-    "currentSellingPrice": "must be greater than or equal to 0"
-  }
+  "timestamp": "2026-05-26T14:33:00",
+  "status": 400,
+  "error": "Validation Failed",
+  "message": "Input validation errors occurred",
+  "details": {
+    "name": "must not be blank",
+    "currentSellingPrice": "must be greater than or equal to 0"
+  }
 }
 ```
 
 Scenario E — Optimistic Lock Conflict:
-Simulating concurrent updates to the same Drug entity triggers HTTP 409:
+Simulating concurrent updates to the same Drug or Purchase entity triggers HTTP 409:
 ```json
 {
-  "timestamp": "2026-05-26T14:34:00",
-  "status": 409,
-  "error": "Conflict",
-  "message": "Conflict occurred: The drug or purchase was updated by another process. Please reload and try again."
+  "timestamp": "2026-05-26T14:34:00",
+  "status": 409,
+  "error": "Conflict",
+  "message": "Conflict occurred: The drug or purchase was updated by another process. Please reload and try again."
 }
 ```
 
@@ -604,7 +621,7 @@ Simulating concurrent updates to the same Drug entity triggers HTTP 409:
 
 The Phase 1 desktop application was built with Java Swing, raw JDBC, and a monolithic code structure where UI event handlers directly invoked DAO methods. The Phase 2 web application represents a fundamental architectural upgrade across four dimensions.
 
-Concurrency and Multi-User Support: The Swing application had no built-in concurrency model — two staff members running the desktop JAR on separate machines would have no coordinated access to the same MySQL database, risking phantom reads and lost updates on stock. The web application introduces optimistic locking via @Version on Drug and Purchase entities. When two cashiers process sales for the same drug simultaneously, the second transaction detects a version conflict and throws ObjectOptimisticLockingFailureException, preventing silent stock corruption.
+Concurrency and Multi-User Support: The Swing application had no built-in concurrency model — two staff members running the desktop JAR on separate machines would have no coordinated access to the same MySQL database, risking phantom reads and lost updates on stock. The web application introduces optimistic locking via @Version on both Drug and Purchase entities. When two cashiers process sales for the same drug simultaneously, the second transaction detects a version conflict and throws ObjectOptimisticLockingFailureException, preventing silent stock corruption.
 
 Deployment and Accessibility: The Swing application required JRE installation, JAR distribution, and manual database connection configuration on each workstation. The web application is accessed through any modern browser with zero client-side installation. A single Spring Boot executable JAR runs on a central server, and all workstations connect via HTTP.
 
@@ -628,17 +645,29 @@ DTO Layer Adaptability — The response DTOs (DrugResponse, SaleResponse, Custom
 
 Repository Query Patterns — The FIFO query (findByDrug_BarcodeAndRemainingQuantityGreaterThanOrderByExpirationDateAsc) is a reusable Spring Data JPA derived query. Any module needing batch-level inventory visibility can reuse this query without writing SQL.
 
-**8.3 Challenges Faced**
+**8.3 Challenges Faced and Key Architectural Refactorings**
 
-Optimistic Locking Granularity — The @Version annotation on Drug and Purchase initially caused frequent ObjectOptimisticLockingFailureException during sequential POS operations because the Drug entity was loaded, modified, and saved within a single transaction even when only Purchase records changed. The resolution was to avoid saving the Drug entity unless its fields actually changed. In SaleService.deductFromBatches, only Purchase entities are saved, reducing version conflicts on the Drug row.
+*Optimistic Locking Granularity:* The @Version annotation on Drug and Purchase initially caused frequent ObjectOptimisticLockingFailureException during sequential POS operations because the Drug entity was loaded, modified, and saved within a single transaction even when only Purchase records changed. The resolution was to avoid saving the Drug entity unless its fields actually changed. In SaleService.deductFromBatches, only Purchase entities are saved, reducing version conflicts on the Drug row.
 
-Prescription Type Mapping to Business Rules — The initial design used a boolean isControlled field on Drug. This proved insufficient because Turkish pharmaceutical regulations differentiate between multiple controlled categories (Orange, Purple, Green, Red) with different penalties and reporting requirements. The solution was to introduce the PresType entity with a numeric riskLevel scale, allowing finer-grained rules in the future (e.g., Red prescriptions additionally require doctor name logging).
+*Prescription Type Mapping to Business Rules:* The initial design used a boolean isControlled field on Drug. This proved insufficient because Turkish pharmaceutical regulations differentiate between multiple controlled categories (Orange, Purple, Green, Red) with different penalties and reporting requirements. The solution was to introduce the PresType entity with a numeric riskLevel scale, allowing finer-grained rules in the future (e.g., Red prescriptions additionally require doctor name logging).
 
 **[- PHOTO: PresType enum-to-riskLevel mapping table showing the 5 tiers and their rule implications -]**
 
-Thymeleaf Role-Conditional Rendering — Spring Security's sec:authorize attribute works server-side, meaning templates are rendered before reaching the browser. Debugging role-visibility issues required checking both the authentication object's granted authorities and the Thymeleaf attribute syntax. The resolution was to consistently use hasRole('ROLE_NAME') without the ROLE_ prefix (Spring auto-prefixes it in hasRole).
+*Thymeleaf Role-Conditional Rendering:* Spring Security's sec:authorize attribute works server-side, meaning templates are rendered before reaching the browser. Debugging role-visibility issues required checking both the authentication object's granted authorities and the Thymeleaf attribute syntax. The resolution was to consistently use hasRole('ROLE_NAME') without the ROLE_ prefix (Spring auto-prefixes it in hasRole).
 
-FIFO Boundary with Expired Batches — The initial FIFO implementation did not filter out expired batches (expirationDate before today), so a sale could deduct from an expired batch if it was the oldest. The fix was adding a .filter(b -> !b.getExpirationDate().isBefore(LocalDate.now())) stream operation in SaleService.deductFromBatches before the depletion loop.
+*FIFO Boundary with Expired Batches:* The initial FIFO implementation did not filter out expired batches (expirationDate before today), so a sale could deduct from an expired batch if it was the oldest. The fix was adding a .filter(b -> !b.getExpirationDate().isBefore(LocalDate.now())) stream operation in SaleService.deductFromBatches before the depletion loop.
+
+*Strategy Pattern Refactoring to Spring Auto-Wiring List:* 
+One of the most complex behavioral challenges was eliminating the residual conditional logic (if-else chains) in the service layer when resolving the expiration status of drug batches. The service layer was systematically refactored to implement a completely pure Strategy Pattern. This was achieved by introducing `boolean isApplicable(long daysRemaining)` into the `ExpiryStrategy` interface, registering concrete strategy classes as Spring components, and injecting them as a `List<ExpiryStrategy>` inside `ExpiryService`. At runtime, a stream filter resolves the appropriate strategy dynamically. This eliminates switch blocks or structural dependencies, establishing a clean, decoupled design.
+
+*Elimination of Nested Inner Classes (DTO Extraction):*
+To strictly adhere to KURAL 2 of package hierarchy and separation of concerns, the static nested class `PurchaseBatchRequest` originally situated inside `PurchaseController` was completely extracted. A dedicated public class file was created under `dto/request/PurchaseBatchRequest.java`, ensuring all models used for binding incoming request payloads are strictly compartmentalized and do not contaminate controller contexts.
+
+*Encapsulation of Entity Mapping in the Service Layer:*
+To ensure Controllers serve purely as thin entry gates (routing and validation), all DTO-to-Entity structural conversion and builder logic was extracted out of `DrugController` and `UserController` and consolidated inside `DrugService` (e.g., `create(DrugCreateRequest)` and `update(barcode, DrugCreateRequest)`) and `UserService` (e.g., `createUser(UserCreateRequest)`). This prevents JPA model manipulation from bleeding into Web/REST contexts, satisfying strict architectural layering boundaries.
+
+*Resolving DRY Violations (Duplicate Methods):*
+An audit identified a duplicate implementation of the `getTotalStock` method in both `PurchaseService` and `DrugService`. To preserve the single-source-of-truth contract, the redundant method was entirely eliminated from `PurchaseService`. The `DrugService` was established as the sole, canonical domain layer responsible for retrieving total stock, communicating directly with the `PurchaseRepository`'s aggregate `sumRemainingByDrugBarcode(barcode)` query.
 
 ---
 
@@ -651,11 +680,11 @@ The project successfully delivers a production-grade Pharmacy Management and POS
 - A fully normalized 9-table relational schema where stock is computed from Purchase batch aggregations rather than stored on the Drug record.
 - A FIFO batch-depletion engine that consumes purchase lots in expiration-date order, verified by 8 dedicated Mockito test methods.
 - A prescription validation gate that blocks controlled-substance sales to anonymous customers using the PresType.riskLevel scale.
-- A Strategy-pattern-based expiry evaluation system that eliminates conditional chains and supports extensible classification criteria.
+- A dynamic, Spring list autowired Strategy-pattern-based expiry evaluation system that completely eliminates conditional chains and supports extensible classification criteria.
 - A Spring Security integration with BCrypt password hashing, database-driven UserDetailsService, and role-conditional Thymeleaf UI rendering for three distinct user profiles.
-- A centralized error-handling infrastructure covering 6 domain exceptions plus validation failures, returning consistent JSON structures.
+- A centralized error-handling infrastructure covering 5 custom domain exceptions alongside standard validation and locking exceptions, returning consistent JSON structures.
 - A financial ledger computing revenue, cost of goods sold, profit, and expired-loss metrics using frozen prices from historical SaleItem and Purchase records.
-- Optimistic locking protection on Drug and Purchase entities to prevent concurrent sale conflicts.
+- Optimistic locking protection on both Drug and Purchase entities to prevent concurrent sale conflicts.
 - 23 JUnit 5 service-layer tests with 100% pass rate.
 
 **[- PHOTO: Final dashboard screenshot showing all 4 Bento-box stat cards with live data, sidebar fully expanded, and no error alerts -]**
@@ -697,5 +726,3 @@ Gamma, E., Helm, R., Johnson, R., & Vlissides, J. (1994). *Design Patterns: Elem
 Turkish Medicines and Medical Devices Agency. (2023). *Regulation on the Tracking of Pharmaceuticals and Medical Devices*. TITCK Official Gazette No. 32100.
 
 Fowler, M. (2002). *Patterns of Enterprise Application Architecture*. Addison-Wesley Professional.
-
-bu haline bak nasıl

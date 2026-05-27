@@ -1,6 +1,7 @@
 package com.pharmacy.service;
 
 import com.pharmacy.advice.DuplicateEntryException;
+import com.pharmacy.dto.request.CategoryCreateRequest;
 import com.pharmacy.model.Category;
 import com.pharmacy.repository.CategoryRepository;
 import com.pharmacy.repository.DrugRepository;
@@ -23,8 +24,11 @@ public class CategoryService {
     }
 
     @Transactional
-    public Category save(Category category) {
-        category.setIsActive(true);
+    public Category create(CategoryCreateRequest request) {
+        Category category = Category.builder()
+                .name(request.getName())
+                .isActive(true)
+                .build();
         return categoryRepository.save(category);
     }
 

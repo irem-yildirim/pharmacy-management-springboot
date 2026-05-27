@@ -1,8 +1,10 @@
 package com.pharmacy.service;
 
+import com.pharmacy.dto.request.DrugCreateRequest;
 import com.pharmacy.model.Drug;
 import com.pharmacy.advice.DrugNotFoundException;
 import com.pharmacy.repository.DrugRepository;
+import com.pharmacy.repository.PurchaseRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,6 +25,9 @@ class DrugServiceTest {
 
     @Mock
     private DrugRepository drugRepository;
+
+    @Mock
+    private PurchaseRepository purchaseRepository;
 
     @InjectMocks
     private DrugService drugService;
@@ -72,14 +77,23 @@ class DrugServiceTest {
     }
 
     @Test
-    void testSave() {
-        when(drugRepository.save(sampleDrug)).thenReturn(sampleDrug);
+    void testCreate() {
+        DrugCreateRequest request = DrugCreateRequest.builder()
+                .barcode("8690000000001")
+                .name("Parol 500 mg")
+                .categoryId(1L)
+                .brandId(1L)
+                .currentSellingPrice(new BigDecimal("45.50"))
+                .minStockAlert(10)
+                .build();
 
-        Drug result = drugService.save(sampleDrug);
+        when(drugRepository.save(any(Drug.class))).thenReturn(sampleDrug);
+
+        Drug result = drugService.create(request);
 
         assertNotNull(result);
         assertEquals("Parol 500 mg", result.getName());
-        verify(drugRepository, times(1)).save(sampleDrug);
+        verify(drugRepository, times(1)).save(any(Drug.class));
     }
 
     @Test

@@ -3,10 +3,7 @@ package com.pharmacy.controller.api;
 import com.pharmacy.dto.request.DrugCreateRequest;
 import com.pharmacy.dto.response.DrugResponse;
 import com.pharmacy.dto.response.PurchaseBatchResponse;
-import com.pharmacy.model.Brand;
-import com.pharmacy.model.Category;
 import com.pharmacy.model.Drug;
-import com.pharmacy.model.PresType;
 import com.pharmacy.service.DrugService;
 import com.pharmacy.service.ExpiryService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -63,17 +60,7 @@ public class DrugController {
     @PostMapping
     @Operation(summary = "Register a new drug", description = "Creates a new pharmaceutical product record in the catalog")
     public ResponseEntity<DrugResponse> save(@Valid @RequestBody DrugCreateRequest request) {
-        Drug drug = Drug.builder()
-                .barcode(request.getBarcode())
-                .name(request.getName())
-                .category(Category.builder().id(request.getCategoryId()).build())
-                .brand(Brand.builder().id(request.getBrandId()).build())
-                .presType(request.getPresTypeId() != null ? PresType.builder().id(request.getPresTypeId()).build() : null)
-                .currentSellingPrice(request.getCurrentSellingPrice())
-                .minStockAlert(request.getMinStockAlert())
-                .isActive(true)
-                .build();
-        Drug saved = drugService.save(drug);
+        Drug saved = drugService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(DrugResponse.fromEntity(saved));
     }
 
@@ -99,14 +86,7 @@ public class DrugController {
     public ResponseEntity<DrugResponse> update(
             @PathVariable String barcode,
             @RequestBody Map<String, Object> payload) {
-        Drug drug = drugService.findByBarcode(barcode);
-        if (payload.containsKey("currentSellingPrice")) {
-            drug.setCurrentSellingPrice(new BigDecimal(payload.get("currentSellingPrice").toString()));
-        }
-        if (payload.containsKey("minStockAlert")) {
-            drug.setMinStockAlert(Integer.parseInt(payload.get("minStockAlert").toString()));
-        }
-        Drug updated = drugService.save(drug);
+        Drug updated = drugService.update(barcode, payload);
         return ResponseEntity.ok(DrugResponse.fromEntity(updated));
     }
 }

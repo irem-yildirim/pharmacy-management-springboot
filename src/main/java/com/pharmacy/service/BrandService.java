@@ -1,6 +1,7 @@
 package com.pharmacy.service;
 
 import com.pharmacy.advice.DuplicateEntryException;
+import com.pharmacy.dto.request.BrandCreateRequest;
 import com.pharmacy.model.Brand;
 import com.pharmacy.repository.BrandRepository;
 import com.pharmacy.repository.DrugRepository;
@@ -23,8 +24,11 @@ public class BrandService {
     }
 
     @Transactional
-    public Brand save(Brand brand) {
-        brand.setIsActive(true);
+    public Brand create(BrandCreateRequest request) {
+        Brand brand = Brand.builder()
+                .name(request.getName())
+                .isActive(true)
+                .build();
         return brandRepository.save(brand);
     }
 

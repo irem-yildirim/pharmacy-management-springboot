@@ -37,10 +37,6 @@ public class PurchaseService {
         return purchaseRepository.save(purchase);
     }
 
-    public int getTotalStock(String barcode) {
-        return purchaseRepository.sumRemainingByDrugBarcode(barcode);
-    }
-
     public List<Purchase> findAll() {
         return purchaseRepository.findAllByOrderByPurchaseDateDesc();
     }

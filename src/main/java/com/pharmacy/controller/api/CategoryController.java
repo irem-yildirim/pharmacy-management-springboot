@@ -1,7 +1,7 @@
 package com.pharmacy.controller.api;
 
+import com.pharmacy.dto.request.CategoryCreateRequest;
 import com.pharmacy.dto.response.CategoryResponse;
-import com.pharmacy.model.Category;
 import com.pharmacy.service.CategoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -33,9 +33,9 @@ public class CategoryController {
 
     @PostMapping
     @Operation(summary = "Create a new category", description = "Adds a new drug classification category")
-    public ResponseEntity<CategoryResponse> save(@Valid @RequestBody Category category) {
-        Category saved = categoryService.save(category);
-        return ResponseEntity.status(HttpStatus.CREATED).body(CategoryResponse.fromEntity(saved));
+    public ResponseEntity<CategoryResponse> save(@Valid @RequestBody CategoryCreateRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(CategoryResponse.fromEntity(categoryService.create(request)));
     }
 
     @DeleteMapping("/{id}")

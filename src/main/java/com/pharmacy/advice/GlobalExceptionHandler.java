@@ -92,18 +92,21 @@ public class GlobalExceptionHandler {
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.CONFLICT.value())
                 .error(HttpStatus.CONFLICT.getReasonPhrase())
-                .message("Conflict occurred: The drug or purchase was updated by another process. Please reload and try again.")
+                .message(
+                        "Conflict occurred: The drug or purchase was updated by another process. Please reload and try again.")
                 .build();
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 
     @ExceptionHandler(org.springframework.orm.ObjectOptimisticLockingFailureException.class)
-    public ResponseEntity<ErrorResponse> handleSpringOptimisticLock(org.springframework.orm.ObjectOptimisticLockingFailureException ex) {
+    public ResponseEntity<ErrorResponse> handleSpringOptimisticLock(
+            org.springframework.orm.ObjectOptimisticLockingFailureException ex) {
         ErrorResponse response = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.CONFLICT.value())
                 .error(HttpStatus.CONFLICT.getReasonPhrase())
-                .message("Conflict occurred: The drug or purchase was updated by another process. Please reload and try again.")
+                .message(
+                        "Conflict occurred: The drug or purchase was updated by another process. Please reload and try again.")
                 .build();
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }

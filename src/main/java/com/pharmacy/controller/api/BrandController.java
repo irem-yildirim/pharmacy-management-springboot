@@ -1,7 +1,7 @@
 package com.pharmacy.controller.api;
 
+import com.pharmacy.dto.request.BrandCreateRequest;
 import com.pharmacy.dto.response.BrandResponse;
-import com.pharmacy.model.Brand;
 import com.pharmacy.service.BrandService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -33,9 +33,9 @@ public class BrandController {
 
     @PostMapping
     @Operation(summary = "Create a new brand", description = "Adds a new pharmaceutical manufacturer brand")
-    public ResponseEntity<BrandResponse> save(@Valid @RequestBody Brand brand) {
-        Brand saved = brandService.save(brand);
-        return ResponseEntity.status(HttpStatus.CREATED).body(BrandResponse.fromEntity(saved));
+    public ResponseEntity<BrandResponse> save(@Valid @RequestBody BrandCreateRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(BrandResponse.fromEntity(brandService.create(request)));
     }
 
     @DeleteMapping("/{id}")
