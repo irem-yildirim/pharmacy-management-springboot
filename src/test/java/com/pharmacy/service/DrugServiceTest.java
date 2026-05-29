@@ -3,6 +3,7 @@ package com.pharmacy.service;
 import com.pharmacy.dto.request.DrugCreateRequest;
 import com.pharmacy.model.Drug;
 import com.pharmacy.advice.DrugNotFoundException;
+import com.pharmacy.advice.DuplicateEntryException;
 import com.pharmacy.repository.DrugRepository;
 import com.pharmacy.repository.PurchaseRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -87,13 +88,33 @@ class DrugServiceTest {
                 .minStockAlert(10)
                 .build();
 
+        when(drugRepository.existsById("8690000000001")).thenReturn(false);
         when(drugRepository.save(any(Drug.class))).thenReturn(sampleDrug);
 
         Drug result = drugService.create(request);
 
         assertNotNull(result);
         assertEquals("Parol 500 mg", result.getName());
+        verify(drugRepository, times(1)).existsById("8690000000001");
         verify(drugRepository, times(1)).save(any(Drug.class));
+    }
+
+    @Test
+    void testCreateDuplicateBarcode() {
+        DrugCreateRequest request = DrugCreateRequest.builder()
+                .barcode("8690000000001")
+                .name("Parol 500 mg")
+                .categoryId(1L)
+                .brandId(1L)
+                .currentSellingPrice(new BigDecimal("45.50"))
+                .minStockAlert(10)
+                .build();
+
+        when(drugRepository.existsById("8690000000001")).thenReturn(true);
+
+        assertThrows(DuplicateEntryException.class, () -> drugService.create(request));
+        verify(drugRepository, times(1)).existsById("8690000000001");
+        verify(drugRepository, never()).save(any(Drug.class));
     }
 
     @Test

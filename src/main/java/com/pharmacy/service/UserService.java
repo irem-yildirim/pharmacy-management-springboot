@@ -4,6 +4,7 @@ import com.pharmacy.dto.request.UserCreateRequest;
 import com.pharmacy.model.Role;
 import com.pharmacy.model.Sale;
 import com.pharmacy.model.User;
+import com.pharmacy.advice.DuplicateEntryException;
 import com.pharmacy.repository.SaleRepository;
 import com.pharmacy.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +41,9 @@ public class UserService {
 
     @Transactional
     public User createUser(UserCreateRequest request) {
+        if (usernameExists(request.getUsername())) {
+            throw new DuplicateEntryException("Username " + request.getUsername() + " is already registered.");
+        }
         User user = User.builder()
                 .name(request.getName())
                 .username(request.getUsername())

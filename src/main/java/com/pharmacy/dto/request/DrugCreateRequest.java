@@ -11,7 +11,7 @@ import lombok.*;
 public class DrugCreateRequest {
 
     @NotBlank(message = "Barcode must not be blank")
-    @Size(max = 50, message = "Barcode must not exceed 50 characters")
+    @Pattern(regexp = "^\\d{13}$", message = "Barcode must be exactly 13 digits")
     private String barcode;
 
     @NotBlank(message = "Name must not be blank")

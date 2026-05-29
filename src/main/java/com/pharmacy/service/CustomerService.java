@@ -1,6 +1,7 @@
 package com.pharmacy.service;
 
 import com.pharmacy.advice.CustomerNotFoundException;
+import com.pharmacy.advice.DuplicateEntryException;
 import com.pharmacy.dto.request.CustomerCreateRequest;
 import com.pharmacy.model.Customer;
 import com.pharmacy.repository.CustomerRepository;
@@ -28,6 +29,9 @@ public class CustomerService {
 
     @Transactional
     public Customer create(CustomerCreateRequest request) {
+        if (request.getPhone() != null && customerRepository.existsByPhone(request.getPhone())) {
+            throw new DuplicateEntryException("Customer with phone number " + request.getPhone() + " already exists.");
+        }
         Customer customer = Customer.builder()
                 .name(request.getName())
                 .phone(request.getPhone())

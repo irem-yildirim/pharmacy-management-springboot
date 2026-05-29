@@ -9,6 +9,8 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
 
     List<Customer> findByIsActiveTrue();
 
+    boolean existsByPhone(String phone);
+
     List<Customer> findByIsActiveTrueAndNameContainingIgnoreCaseOrIsActiveTrueAndPhoneContaining(
             String name, String phone);
 }

@@ -7,6 +7,7 @@ import com.pharmacy.model.Drug;
 import com.pharmacy.model.PresType;
 import com.pharmacy.model.Purchase;
 import com.pharmacy.advice.DrugNotFoundException;
+import com.pharmacy.advice.DuplicateEntryException;
 import com.pharmacy.repository.DrugRepository;
 import com.pharmacy.repository.PurchaseRepository;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,9 @@ public class DrugService {
 
     @Transactional
     public Drug create(DrugCreateRequest request) {
+        if (drugRepository.existsById(request.getBarcode())) {
+            throw new DuplicateEntryException("Drug with barcode " + request.getBarcode() + " already exists.");
+        }
         Drug drug = Drug.builder()
                 .barcode(request.getBarcode())
                 .name(request.getName())

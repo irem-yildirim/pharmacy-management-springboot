@@ -79,8 +79,10 @@
                             <div>
                                 <label for="new-barcode" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Barcode / UPC</label>
                                 <input type="text" id="new-barcode" required
+                                       minlength="13" maxlength="13" pattern="\d{13}" inputmode="numeric"
+                                       title="Barcode must be exactly 13 digits"
                                        class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:border-indigo-500 focus:bg-white transition-all duration-200"
-                                       placeholder="Scan or type barcode...">
+                                       placeholder="Enter 13-digit barcode (e.g. 8699514010686)">
                             </div>
                             <div>
                                 <label for="new-name" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Drug Name</label>
@@ -260,13 +262,20 @@
                 e.preventDefault();
                 const btn = document.getElementById('new-submit-btn');
 
-                const barcode = document.getElementById('new-barcode').value;
+                const barcode = document.getElementById('new-barcode').value.trim();
                 const name = document.getElementById('new-name').value;
                 const categoryId = parseInt(document.getElementById('new-category').value);
                 const brandId = parseInt(document.getElementById('new-brand').value);
                 const presTypeId = parseInt(document.getElementById('new-pres-type').value);
                 const sellingPrice = parseFloat(document.getElementById('new-selling-price').value);
                 const minStock = parseInt(document.getElementById('new-min-stock').value);
+
+                // Barcode validation: must be exactly 13 digits
+                if (!/^\d{13}$/.test(barcode)) {
+                    window.showToast("Barcode must be exactly 13 digits (0-9 only). You entered " + barcode.length + " characters.", "error");
+                    document.getElementById('new-barcode').focus();
+                    return;
+                }
 
                 const qty = parseInt(document.getElementById('new-qty').value);
                 const purchasePrice = parseFloat(document.getElementById('new-purchase-price').value);
