@@ -41,13 +41,8 @@ public class UIController {
         return "purchase/index";
     }
 
-    @GetMapping("/customer")
+    @GetMapping({"/customer", "/customers/list"})
     public String customer() {
-        return "customer/index";
-    }
-
-    @GetMapping("/customers/list")
-    public String customerList() {
         return "customers/list";
     }
 
